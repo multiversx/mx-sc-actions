@@ -13,6 +13,10 @@ on:
         default: 'latest'
         required: false
         type: string
+      token:
+        description: 'Github token'
+        type: string
+        required: true
 
 jobs:
   wasm_test:
@@ -25,14 +29,14 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           default: true
-          toolchain: ${{ inputs.rust-toolchain }}
+          toolchain: ${{ github.event.inputs.rust-toolchain }}
       - run: echo "PATH=$HOME/.local/bin:$HOME/elrondsdk/vmtools:$PATH" >> $GITHUB_ENV
 
       - name: Install prerequisites
         run: |
           pip3 install erdpy
           mkdir $HOME/elrondsdk
-          erdpy config set dependencies.vmtools.tag ${{ inputs.vmtools-version }}
+          erdpy config set dependencies.vmtools.tag ${{ github.event.inputs.vmtools-version }}
           erdpy deps install vmtools
           erdpy deps install nodejs
           erdpy deps install wasm-opt
@@ -117,7 +121,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           default: true
-          toolchain: ${{ inputs.rust-toolchain }}
+          toolchain: ${{ github.event.inputs.rust-toolchain }}
 
       - name: Run rust tests
         run: cargo test
@@ -129,9 +133,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ inputs.rust-toolchain }}
+          toolchain: ${{ github.event.inputs.rust-toolchain }}
           components: clippy
           default: true
       - uses: actions-rs/clippy-check@v1
         with:
-          token: ${{ github.token }}
+          token: ${{ github.event.inputs.token }}
