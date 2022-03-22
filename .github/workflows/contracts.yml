@@ -79,11 +79,11 @@ jobs:
           echo "Contract comparison - from {{ .base }} to {{ .head }}" > report.md
           if [ ! -f base-report/report.json ]
           then
-              echo ":warning: Warning: Could not download the report for the base branch {{ .base }}." >> report.md
-              mkdir base-report
-              echo "{ \"features\":[], \"folders\": [] }" > base-report/report.json
+              echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
+              erdpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
+          else
+              erdpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
           fi
-          erdpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
           echo report-table.md >> report.md
 
       - name: Render the report from the template
