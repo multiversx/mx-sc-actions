@@ -13,6 +13,11 @@ on:
         default: 'latest'
         required: false
         type: string
+      extra-build-args:
+        description: 'extra build arguments'
+        default: ''
+        required: false
+        type: string
       token:
         description: 'Github token'
         type: string
@@ -30,7 +35,9 @@ jobs:
         with:
           default: true
           toolchain: "${{ inputs.rust-toolchain }}"
-      - run: echo "PATH=$HOME/.local/bin:$HOME/elrondsdk/vmtools:$PATH" >> $GITHUB_ENV
+
+      - name: Setup the PATH variable
+        run: echo "PATH=$HOME/.local/bin:$HOME/elrondsdk/vmtools:$PATH" >> $GITHUB_ENV
 
       - name: Install prerequisites
         run: |
@@ -42,12 +49,12 @@ jobs:
           erdpy deps install wasm-opt
 
       - name: Build the wasm contracts
-        run: erdpy contract build -r
+        run: erdpy contract build -r ${{ inputs.extra-build-args }}
 
-      - name: Run Arwen tests
+      - name: Run the wasm tests
         run: cargo test --features elrond-wasm-debug/mandos-go-tests
 
-      - name: Generate contract report
+      - name: Generate the contract report
         run: erdpy contract report --skip-build --output-format json --output-file report.json
 
       - name: Upload the report json
@@ -56,7 +63,7 @@ jobs:
           name: report
           path: report.json
 
-      - name: Download base report
+      - name: Download the base report
         uses: dawidd6/action-download-artifact@v2
         if: github.event_name == 'pull_request'
         continue-on-error: true
@@ -66,7 +73,7 @@ jobs:
           commit: ${{ github.event.pull_request.base.sha }}
           path: base-report
 
-      - name: Generate report template
+      - name: Generate the report template
         if: github.event_name == 'pull_request'
         run: |
           echo "Contract comparison - from {{ .base }} to {{ .head }}" > report.md
@@ -79,7 +86,7 @@ jobs:
           erdpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
           echo report-table.md >> report.md
 
-      - name: Render the report from template
+      - name: Render the report from the template
         id: template
         uses: chuhlomin/render-template@v1.2
         if: github.event_name == 'pull_request'
@@ -95,7 +102,7 @@ jobs:
           name: report-markdown
           path: report.md
 
-      - name: Find the report comment
+      - name: Find the comment containing the report
         id: fc
         uses: peter-evans/find-comment@v1
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
@@ -123,7 +130,7 @@ jobs:
           default: true
           toolchain: ${{ inputs.rust-toolchain }}
 
-      - name: Run rust tests
+      - name: Run the rust tests
         run: cargo test
 
   clippy_check:
