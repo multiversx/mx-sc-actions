@@ -18,7 +18,8 @@ on:
         default: ''
         required: false
         type: string
-      token:
+    secrets:
+      GITHUB_TOKEN:
         description: 'Github token'
         type: string
         required: true
@@ -165,4 +166,4 @@ jobs:
           default: true
       - uses: actions-rs/clippy-check@v1
         with:
-          token: ${{ inputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
