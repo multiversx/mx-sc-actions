@@ -30,6 +30,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          default: true
+          toolchain: "${{ inputs.rust-toolchain }}"
+
       - name: Setup the PATH variable
         run: echo "PATH=$HOME/.local/bin:$HOME/elrondsdk/vmtools:$PATH" >> $GITHUB_ENV
 
@@ -37,16 +43,13 @@ jobs:
         run: |
           pip3 install erdpy
           mkdir $HOME/elrondsdk
-
           erdpy config set dependencies.vmtools.tag ${{ inputs.vmtools-version }}
           erdpy deps install vmtools
 
           erdpy deps install nodejs
           erdpy deps install wasm-opt
 
-          erdpy config set dependencies.rust.tag ${{ inputs.rust-toolchain }}
           erdpy deps install rust
-
           erdpy deps install twiggy
 
       - name: Build the wasm contracts
@@ -85,7 +88,7 @@ jobs:
           else
               erdpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
           fi
-          echo report-table.md >> report.md
+          cat report-table.md >> report.md
 
       - name: Render the report from the template
         id: template
