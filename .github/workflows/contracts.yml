@@ -24,23 +24,8 @@ on:
         required: true
 
 jobs:
-  skip_check:
-    name: Skip check
-    runs-on: ubuntu-latest
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-    - name: Skip duplicate actions
-      id: skip_check
-      uses: fkirc/skip-duplicate-actions@v3.4.1
-      with:
-        cancel_others: true
-        do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
-
   wasm_test:
     name: Wasm tests
-    needs: skip_check
-    if: needs.skip_check.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -138,8 +123,6 @@ jobs:
 
   rust_test:
     name: Rust tests
-    needs: skip_check
-    if: needs.skip_check.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -153,8 +136,6 @@ jobs:
 
   clippy_check:
     name: Clippy linter check
-    needs: skip_check
-    if: needs.skip_check.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
