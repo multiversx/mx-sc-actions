@@ -60,6 +60,7 @@ jobs:
           erdpy deps install vmtools
           erdpy deps install nodejs
           erdpy deps install wasm-opt
+          erdpy deps install twiggy
 
       - name: Build the wasm contracts
         run: erdpy contract build -r ${{ inputs.extra-build-args }}
