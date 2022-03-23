@@ -47,6 +47,7 @@ jobs:
           erdpy deps install vmtools
           erdpy deps install nodejs
           erdpy deps install wasm-opt
+          echo $PATH
           erdpy deps install twiggy
 
       - name: Build the wasm contracts
