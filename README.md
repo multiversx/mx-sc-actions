@@ -10,7 +10,7 @@ A Github Action for smart contracts which:
 
 ### Standard build
 
-See [action.yml](action.yml)
+See [contracts.yml](.github/workflows/contracts.yml)
 This uses fixed versions of rust and vmtools.
 Ignores `eei` checks which allows the contracts to use features which are not live on the elrond mainnet yet.
 
