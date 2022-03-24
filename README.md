@@ -34,3 +34,10 @@ jobs:
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+### Additional options
+
+The erdpy version can be specified by providing:
+```yml
+pip-erdpy-args: erdpy==1.2.3
+```

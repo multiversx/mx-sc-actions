@@ -13,6 +13,11 @@ on:
         default: 'latest'
         required: false
         type: string
+      pip-erdpy-args:
+        description: 'pip erdpy install arguments'
+        default: 'erdpy'
+        required: false
+        type: string
       extra-build-args:
         description: 'extra build arguments'
         default: ''
@@ -41,10 +46,9 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          pip3 install erdpy
+          pip3 install ${{ inputs.pip-erdpy-args }}
           mkdir $HOME/elrondsdk
-          erdpy config set dependencies.vmtools.tag ${{ inputs.vmtools-version }}
-          erdpy deps install vmtools
+          erdpy deps install vmtools --tag ${{ inputs.vmtools-version }}
 
           erdpy deps install nodejs
           erdpy deps install wasm-opt
