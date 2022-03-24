@@ -1,0 +1,156 @@
+name: Contracts builds and tests
+
+on:
+  workflow_call:
+    inputs:
+      rust-toolchain:
+        description: 'Rust toolchain to use'
+        default: 'nightly'
+        required: false
+        type: string
+      vmtools-version:
+        description: 'vmtools version to use'
+        default: 'latest'
+        required: false
+        type: string
+      pip-erdpy-args:
+        description: 'pip erdpy install arguments'
+        default: 'erdpy'
+        required: false
+        type: string
+      extra-build-args:
+        description: 'extra build arguments'
+        default: ''
+        required: false
+        type: string
+    secrets:
+      token:
+        description: 'Github token'
+        required: true
+
+jobs:
+  wasm_test:
+    name: Wasm tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          default: true
+          toolchain: "${{ inputs.rust-toolchain }}"
+
+      - name: Setup the PATH variable
+        run: echo "PATH=$HOME/.local/bin:$HOME/elrondsdk/vmtools:$PATH" >> $GITHUB_ENV
+
+      - name: Install prerequisites
+        run: |
+          pip3 install ${{ inputs.pip-erdpy-args }}
+          mkdir $HOME/elrondsdk
+          erdpy deps install vmtools --tag ${{ inputs.vmtools-version }}
+
+          erdpy deps install nodejs
+          erdpy deps install wasm-opt
+
+          cargo install twiggy
+
+      - name: Build the wasm contracts
+        run: erdpy contract build -r ${{ inputs.extra-build-args }}
+
+      - name: Run the wasm tests
+        run: cargo test --features elrond-wasm-debug/mandos-go-tests
+
+      - name: Generate the contract report
+        run: erdpy contract report --skip-build --output-format json --output-file report.json
+
+      - name: Upload the report json
+        uses: actions/upload-artifact@v3
+        with:
+          name: report
+          path: report.json
+
+      - name: Download the base report
+        uses: dawidd6/action-download-artifact@v2
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          workflow: actions.yml
+          name: report
+          commit: ${{ github.event.pull_request.base.sha }}
+          path: base-report
+
+      - name: Generate the report template
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Contract comparison - from {{ .base }} to {{ .head }}" > report.md
+          if [ ! -f base-report/report.json ]
+          then
+              echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
+              erdpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
+          else
+              erdpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
+          fi
+          cat report-table.md >> report.md
+
+      - name: Render the report from the template
+        id: template
+        uses: chuhlomin/render-template@v1.2
+        if: github.event_name == 'pull_request'
+        with:
+          template: report.md
+          vars: |
+            base: ${{ github.event.pull_request.base.sha }}
+            head: ${{ github.event.pull_request.head.sha }}
+
+      - name: Upload the report markdown
+        uses: actions/upload-artifact@v3
+        if: github.event_name == 'pull_request'
+        with:
+          name: report-markdown
+          path: report.md
+
+      - name: Find the comment containing the report
+        id: fc
+        uses: peter-evans/find-comment@v1
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Contract comparison'
+
+      - name: Create or update the report comment
+        uses: peter-evans/create-or-update-comment@v1
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.template.outputs.result }}
+          edit-mode: replace
+
+  rust_test:
+    name: Rust tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          default: true
+          toolchain: ${{ inputs.rust-toolchain }}
+
+      - name: Run the rust tests
+        run: cargo test
+
+  clippy_check:
+    name: Clippy linter check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          components: clippy
+          default: true
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.token }}
