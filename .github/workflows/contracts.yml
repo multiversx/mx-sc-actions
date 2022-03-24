@@ -101,6 +101,7 @@ jobs:
 
       - name: Upload the report markdown
         uses: actions/upload-artifact@v3
+        if: github.event_name == 'pull_request'
         with:
           name: report-markdown
           path: report.md
