@@ -20,8 +20,12 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
+
+permissions:
+  checks: write
+  pull-requests: write
 
 jobs:
   contracts:
@@ -34,6 +38,20 @@ jobs:
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+### Main branch notes
+
+When using the action, pay attention to the branch naming under the push event and use either `main` or `master` accordingly. Using the wrong main branch name will cause the github actions build to be skipped, without displaying an error message.
+
+### Using more than one base branch
+
+As an alternative, when more than one branch is used as a base branch for pull requests, the following can be used instead:
+```yml
+on:
+  push:
+  pull_request:
+```
+Note, however, that this runs the build multiple times for each commit.
 
 ### Additional options
 
