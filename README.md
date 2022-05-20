@@ -55,7 +55,7 @@ Note, however, that this runs the build multiple times for each commit.
 
 ### Private repositories permissions
 
-For private repositories, read-only `content` access has to be granted as well, so the permissions would be:
+For private repositories, read-only `contents` access has to be granted as well, so the permissions would be:
 ```yml
 permissions:
   checks: write
