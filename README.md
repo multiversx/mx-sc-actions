@@ -20,8 +20,12 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
+
+permissions:
+  checks: write
+  pull-requests: write
 
 jobs:
   contracts:
@@ -33,6 +37,30 @@ jobs:
       extra-build-args: --ignore-eei-checks
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Main branch notes
+
+When using the action, pay attention to the branch naming under the push event and use either `main` or `master` accordingly. Using the wrong main branch name will cause the github actions build to be skipped, without displaying an error message.
+
+### Using more than one base branch
+
+As an alternative, when more than one branch is used as a base branch for pull requests, the following can be used instead:
+```yml
+on:
+  push:
+  pull_request:
+```
+Note, however, that this runs the build multiple times for each commit.
+
+### Private repositories permissions
+
+For private repositories, read-only `contents` access has to be granted as well, so the permissions would be:
+```yml
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
 ```
 
 ### Additional options
