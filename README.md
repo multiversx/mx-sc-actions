@@ -53,6 +53,16 @@ on:
 ```
 Note, however, that this runs the build multiple times for each commit.
 
+### Private repositories permissions
+
+For private repositories, read-only `content` access has to be granted as well, so the permissions would be:
+```yml
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+```
+
 ### Additional options
 
 The erdpy version can be specified by providing:
