@@ -53,8 +53,6 @@ jobs:
           erdpy deps install nodejs
           erdpy deps install wasm-opt
 
-          cargo install twiggy
-
       - name: Build the wasm contracts
         run: erdpy contract build -r ${{ inputs.extra-build-args }}
 
