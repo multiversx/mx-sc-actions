@@ -23,6 +23,11 @@ on:
         default: ''
         required: false
         type: string
+      clippy-args:
+        description: 'cargo clippy arguments'
+        default: '--all-targets --all-features'
+        required: false
+        type: string
     secrets:
       token:
         description: 'Github token'
@@ -154,3 +159,4 @@ jobs:
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.token }}
+          args: ${{ inputs.clippy-args }}
