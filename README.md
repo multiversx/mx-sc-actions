@@ -63,9 +63,20 @@ permissions:
   pull-requests: write
 ```
 
-### Additional options
+## Additional options
+
+### Using a custom erdpy version
 
 The erdpy version can be specified by providing:
 ```yml
 pip-erdpy-args: erdpy==1.2.3
 ```
+
+### Installing libtinfo5
+
+When building smart contracts written in C, on ubuntu, the libtinfo5 has to be installed as clang requires this.
+This can be optionally enabled by specifying:
+```yml
+install-libtinfo5: true
+```
+Note: if using a matrix build with multiple operating systems, enable this only for ubuntu.
