@@ -28,6 +28,11 @@ on:
         default: '--all-targets --all-features'
         required: false
         type: string
+      install-libtinfo5:
+        description: 'install libtinfo5'
+        default: false
+        required: false
+        type: boolean
     secrets:
       token:
         description: 'Github token'
@@ -59,6 +64,12 @@ jobs:
           erdpy deps install wasm-opt
 
           cargo install twiggy
+
+      - name: Install libtinfo5
+        if: inputs.install-libtinfo5
+        run: |
+          sudo apt update
+          sudo apt install -y libtinfo5
 
       - name: Build the wasm contracts
         run: erdpy contract build -r ${{ inputs.extra-build-args }}
