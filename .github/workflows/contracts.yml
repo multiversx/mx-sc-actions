@@ -23,6 +23,11 @@ on:
         default: ''
         required: false
         type: string
+      wasm-tests-args:
+        description: 'wasm tests arguments'
+        default: '--features elrond-wasm-debug/mandos-go-tests'
+        required: false
+        type: string
       clippy-args:
         description: 'cargo clippy arguments'
         default: '--all-targets --all-features'
@@ -75,7 +80,7 @@ jobs:
         run: erdpy contract build -r ${{ inputs.extra-build-args }}
 
       - name: Run the wasm tests
-        run: cargo test --features elrond-wasm-debug/mandos-go-tests
+        run: cargo test ${{ inputs.wasm-tests-args }}
 
       - name: Generate the contract report
         run: erdpy contract report --skip-build --output-format json --output-file report.json
