@@ -48,7 +48,7 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: wasm32-unknown-unknown
       - name: Setup the PATH variable
-        run: echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$PATH" >> $GITHUB_ENV
+        run: echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$HOME/multiversx-sdk/nodejs/latest/bin:$PATH" >> $GITHUB_ENV
 
       - name: Install prerequisites
         run: |
