@@ -43,9 +43,10 @@ jobs:
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
           default: true
-          toolchain: "${{ inputs.rust-toolchain }}"
-
+          toolchain: ${{ inputs.rust-toolchain }}
+          target: wasm32-unknown-unknown
       - name: Setup the PATH variable
         run: echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$PATH" >> $GITHUB_ENV
 
