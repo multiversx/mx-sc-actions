@@ -13,19 +13,9 @@ on:
         default: 'latest'
         required: false
         type: string
-      pip-erdpy-args:
-        description: 'pip erdpy install arguments'
-        default: 'erdpy'
-        required: false
-        type: string
-      extra-build-args:
-        description: 'extra build arguments'
-        default: ''
-        required: false
-        type: string
-      wasm-tests-args:
-        description: 'wasm tests arguments'
-        default: '--features elrond-wasm-debug/mandos-go-tests'
+      pip-mxpy-args:
+        description: 'pip mxpy install arguments'
+        default: 'multiversx-sdk-cli'
         required: false
         type: string
       clippy-args:
@@ -61,14 +51,16 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          pip3 install ${{ inputs.pip-erdpy-args }}
+          pip3 install ${{ inputs.pip-mxpy-args }}
           mkdir $HOME/elrondsdk
-          erdpy deps install vmtools --tag ${{ inputs.vmtools-version }}
+          mxpy deps install vmtools --tag ${{ inputs.vmtools-version }}
 
-          erdpy deps install nodejs
-          erdpy deps install wasm-opt
+          mxpy deps install nodejs
+          mxpy deps install wasm-opt
 
           cargo install twiggy
+
+          cargo install multiversx-sc-meta
 
       - name: Install libtinfo5
         if: inputs.install-libtinfo5
@@ -77,13 +69,13 @@ jobs:
           sudo apt install -y libtinfo5
 
       - name: Build the wasm contracts
-        run: erdpy contract build -r ${{ inputs.extra-build-args }}
+        run: sc-meta all build --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
-        run: cargo test ${{ inputs.wasm-tests-args }}
+        run: cargo test --features multiversx-sc-scenario/run-go-tests
 
       - name: Generate the contract report
-        run: erdpy contract report --skip-build --output-format json --output-file report.json
+        run: mxpy contract report --skip-build --output-format json --output-file report.json
 
       - name: Upload the report json
         uses: actions/upload-artifact@v3
@@ -108,9 +100,9 @@ jobs:
           if [ ! -f base-report/report.json ]
           then
               echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
-              erdpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
+              mxpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
           else
-              erdpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
+              mxpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
           fi
           cat report-table.md >> report.md
 
