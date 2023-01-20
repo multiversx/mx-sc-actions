@@ -70,7 +70,7 @@ jobs:
           sudo apt install -y libtinfo5
 
       - name: Build the wasm contracts
-        run: sc-meta all build --target-dir $(pwd)/target --path .
+        run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
         run: cargo test --features multiversx-sc-scenario/run-go-tests
