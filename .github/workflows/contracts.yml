@@ -47,12 +47,12 @@ jobs:
           toolchain: "${{ inputs.rust-toolchain }}"
 
       - name: Setup the PATH variable
-        run: echo "PATH=$HOME/.local/bin:$HOME/elrondsdk/vmtools:$PATH" >> $GITHUB_ENV
+        run: echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$PATH" >> $GITHUB_ENV
 
       - name: Install prerequisites
         run: |
           pip3 install ${{ inputs.pip-mxpy-args }}
-          mkdir $HOME/elrondsdk
+          mkdir $HOME/multiversx-sdk
           mxpy deps install vmtools --tag ${{ inputs.vmtools-version }}
 
           mxpy deps install nodejs
