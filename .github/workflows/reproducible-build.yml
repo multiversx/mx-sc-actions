@@ -36,10 +36,10 @@ jobs:
           create_release = os.getenv("create_release", "").lower() == "true"
           attach_to_release = os.getenv("attach_to_release", "").lower() == "true"
 
-          logging.info("Image tag: {image_tag}")
-          logging.info("Contract name: {contract_name or '*'}")
-          logging.info("Create new release: {create_release}")
-          logging.info("Attach output to existing release: {attach_to_release}")
+          logging.info(f"Image tag: {image_tag}")
+          logging.info(f"Contract name: {contract_name or '*'}")
+          logging.info(f"Create new release: {create_release}")
+          logging.info(f"Attach output to existing release: {attach_to_release}")
 
           if image_tag == "next":
             logging.warning("You've chosen to build the contracts with the image 'multiversx/sdk-rust-contract-builder:next', which is experimental and not recommended for production!")
@@ -71,6 +71,8 @@ jobs:
           import sys
 
           logging.basicConfig(level=logging.INFO)
+
+          logging.info("Check for missing 'wasm/Cargo.lock' files ...")
 
           missing_cargo_lock = False
 
@@ -107,7 +109,8 @@ jobs:
         if: ${{ inputs.attach_to_release == true }}
         run: |
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.json -type f)
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.source.json -type f)
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/artifacts.json -type f)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -138,7 +141,8 @@ jobs:
           sleep 10
           
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.json -type f)
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.source.json -type f)
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/artifacts.json -type f)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           image_tag: ${{ inputs.image_tag }}
