@@ -4,13 +4,9 @@ on:
   workflow_call:
     inputs:
       image_tag:
-        type: choice
+        type: string
         required: true
         description: Image multiversx/sdk-rust-contract-builder
-        options:
-        - v3.2.3
-        - v4.0.3
-        - next
       contract_name:
         type: string
         required: false
