@@ -1,0 +1,136 @@
+name: Build contracts deterministically
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        type: choice
+        required: true
+        description: Image multiversx/sdk-rust-contract-builder
+        options:
+        - v3.2.3
+        - v4.0.3
+        - next
+      contract_name:
+        type: string
+        required: false
+        description: A specific contract to be built
+      create_release:
+        type: boolean
+        description: Whether to create a new release
+      attach_to_release:
+        type: boolean
+        description: Whether to attach output to existing release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Handle input
+        run: |
+          python3 - << "EOF"
+          import logging
+          import os
+          import sys
+
+          image_tag = os.getenv("image_tag", "")
+          contract_name = os.getenv("contract_name", "")
+          create_release = os.getenv("create_release", "").lower() == "true"
+          attach_to_release = os.getenv("attach_to_release", "").lower() == "true"
+
+          if image_tag == "next":
+            logging.warning("You've chosen to build the contracts with the image 'multiversx/sdk-rust-contract-builder:next', which is experimental and not recommended for production!")
+
+          if contract_name:
+            logging.info(f"One contract will be built: {contract_name}.")
+
+          if create_release and attach_to_release:
+            sys.exit("Choose either to create a new release, or to attach the build output to an existing release. Can't pick both. Feel free to pick none, though.")
+          EOF
+        env:
+          image_tag: ${{ github.event.inputs.image_tag }}
+          contract_name: ${{ github.event.inputs.contract_name }}
+          create_release: ${{ github.event.inputs.create_release }}
+          attach_to_release: ${{ github.event.inputs.attach_to_release }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ env.GITHUB_REF_NAME }}
+          fetch-depth: 0
+          repository: ${{ env.GITHUB_REPOSITORY }}
+
+      - name: Preliminary checks
+        run: |
+          python3 - << "EOF"
+          import logging
+          from pathlib import Path
+          import sys
+
+          missing = False
+
+          for cargo_toml in Path(".").rglob("wasm/Cargo.toml"):
+              cargo_lock = cargo_toml.with_suffix(".lock")
+              if not cargo_lock.exists():
+                logging.error(f"wasm/Cargo.lock file not found: {cargo_lock}")
+                missing = True
+            
+          if missing:
+            sys.exit(f"One or more 'wasm/Cargo.lock' files are missing. They are essential for reproducible builds.")
+          EOF
+
+      - name: Download build script
+        run: |
+          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/${{ github.event.inputs.image_tag }}/build_with_docker.py
+      
+      - name: Build contract
+        run: |
+          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ github.event.inputs.image_tag }} --project=. --contract=${{ github.events.inputs.contract_name }} --output=/home/runner/work/output-from-docker
+      
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-output
+          path: |
+            /home/runner/work/output-from-docker/**/*.*
+          if-no-files-found: error
+
+      - name: Upload artifacts to existing release
+        if: ${{ github.event.inputs.attach_to_release == 'true' }}
+        run: |
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.json -type f)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create new release and upload artifacts
+        if: ${{ github.event.inputs.create_release == 'true' }}
+        run: |
+          python3 - << "EOF"
+          from hashlib import blake2b
+          from pathlib import Path
+
+          image_tag = os.getenv("image_tag", "")
+
+          notes = "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ github.event.inputs.image_tag }}**.\n"
+          notes += "\n"
+          notes+= "## Codehashes (blake2b):\n"
+
+          for wasm_file in Path("/home/runner/work/output-from-docker").rglob("*.wasm"):
+            code = wasm_file.read_bytes()
+            h = blake2b(digest_size=32)
+            h.update(code)
+            notes += f"**{wasm_file}**: `{h.hexdigest()}`"
+
+          Path("notes.txt").write_text(notes)
+          EOF
+          
+          gh release create ${{ github.event.inputs.tag }} --target=$GITHUB_SHA --prerelease --title="New release" --generate-notes --notes-file=notes.txt
+          
+          sleep 10
+          
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.json -type f)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          image_tag: ${{ github.event.inputs.image_tag }}
