@@ -29,6 +29,8 @@ jobs:
           import os
           import sys
 
+          logging.basicConfig(level=logging.INFO)
+
           image_tag = os.getenv("image_tag", "")
           contract_name = os.getenv("contract_name", "")
           create_release = os.getenv("create_release", "").lower() == "true"
@@ -68,7 +70,9 @@ jobs:
           from pathlib import Path
           import sys
 
-          missing = False
+          logging.basicConfig(level=logging.INFO)
+
+          missing_cargo_lock = False
 
           for cargo_toml in Path(".").rglob("wasm/Cargo.toml"):
               cargo_lock = cargo_toml.with_suffix(".lock")
@@ -76,9 +80,9 @@ jobs:
                 logging.info(f"Found wasm/Cargo.lock: {cargo_lock}")
               else:
                 logging.error(f"wasm/Cargo.lock file not found: {cargo_lock}")
-                missing = True
+                missing_cargo_lock = True
             
-          if missing:
+          if missing_cargo_lock:
             sys.exit(f"One or more 'wasm/Cargo.lock' files are missing. They are essential for reproducible builds.")
           EOF
 
@@ -100,7 +104,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload artifacts to existing release
-        if: ${{ inputs.attach_to_release == 'true' }}
+        if: ${{ inputs.attach_to_release == true }}
         run: |
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.json -type f)
@@ -108,7 +112,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create new release and upload artifacts
-        if: ${{ inputs.create_release == 'true' }}
+        if: ${{ inputs.create_release == true }}
         run: |
           python3 - << "EOF"
           from hashlib import blake2b
