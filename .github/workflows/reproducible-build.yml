@@ -34,6 +34,11 @@ jobs:
           create_release = os.getenv("create_release", "").lower() == "true"
           attach_to_release = os.getenv("attach_to_release", "").lower() == "true"
 
+          logging.info("Image tag: {image_tag}")
+          logging.info("Contract name: {contract_name or '*'}")
+          logging.info("Create new release: {create_release}")
+          logging.info("Attach output to existing release: {attach_to_release}")
+
           if image_tag == "next":
             logging.warning("You've chosen to build the contracts with the image 'multiversx/sdk-rust-contract-builder:next', which is experimental and not recommended for production!")
 
@@ -44,10 +49,10 @@ jobs:
             sys.exit("Choose either to create a new release, or to attach the build output to an existing release. Can't pick both. Feel free to pick none, though.")
           EOF
         env:
-          image_tag: ${{ github.event.inputs.image_tag }}
-          contract_name: ${{ github.event.inputs.contract_name }}
-          create_release: ${{ github.event.inputs.create_release }}
-          attach_to_release: ${{ github.event.inputs.attach_to_release }}
+          image_tag: ${{ inputs.image_tag }}
+          contract_name: ${{ inputs.contract_name }}
+          create_release: ${{ inputs.create_release }}
+          attach_to_release: ${{ inputs.attach_to_release }}
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -77,11 +82,11 @@ jobs:
 
       - name: Download build script
         run: |
-          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/${{ github.event.inputs.image_tag }}/build_with_docker.py
+          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/${{ inputs.image_tag }}/build_with_docker.py
       
       - name: Build contract
         run: |
-          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ github.event.inputs.image_tag }} --project=. --contract=${{ github.events.inputs.contract_name }} --output=/home/runner/work/output-from-docker
+          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=. --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker
       
       - name: Save artifacts
         uses: actions/upload-artifact@v2
@@ -92,7 +97,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload artifacts to existing release
-        if: ${{ github.event.inputs.attach_to_release == 'true' }}
+        if: ${{ inputs.attach_to_release == 'true' }}
         run: |
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.json -type f)
@@ -100,7 +105,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create new release and upload artifacts
-        if: ${{ github.event.inputs.create_release == 'true' }}
+        if: ${{ inputs.create_release == 'true' }}
         run: |
           python3 - << "EOF"
           from hashlib import blake2b
@@ -108,7 +113,7 @@ jobs:
 
           image_tag = os.getenv("image_tag", "")
 
-          notes = "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ github.event.inputs.image_tag }}**.\n"
+          notes = "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}**.\n"
           notes += "\n"
           notes+= "## Codehashes (blake2b):\n"
 
@@ -121,7 +126,7 @@ jobs:
           Path("notes.txt").write_text(notes)
           EOF
           
-          gh release create ${{ github.event.inputs.tag }} --target=$GITHUB_SHA --prerelease --title="New release" --generate-notes --notes-file=notes.txt
+          gh release create ${{ inputs.tag }} --target=$GITHUB_SHA --prerelease --title="New release" --generate-notes --notes-file=notes.txt
           
           sleep 10
           
@@ -129,4 +134,4 @@ jobs:
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.json -type f)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          image_tag: ${{ github.event.inputs.image_tag }}
+          image_tag: ${{ inputs.image_tag }}
