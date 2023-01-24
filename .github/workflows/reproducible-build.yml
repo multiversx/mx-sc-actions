@@ -72,7 +72,9 @@ jobs:
 
           for cargo_toml in Path(".").rglob("wasm/Cargo.toml"):
               cargo_lock = cargo_toml.with_suffix(".lock")
-              if not cargo_lock.exists():
+              if cargo_lock.exists():
+                logging.info(f"Found wasm/Cargo.lock: {cargo_lock}")
+              else:
                 logging.error(f"wasm/Cargo.lock file not found: {cargo_lock}")
                 missing = True
             
@@ -82,7 +84,8 @@ jobs:
 
       - name: Download build script
         run: |
-          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/${{ inputs.image_tag }}/build_with_docker.py
+          # TODO: Fix git tag before review!
+          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/debug-19/build_with_docker.py
       
       - name: Build contract
         run: |
