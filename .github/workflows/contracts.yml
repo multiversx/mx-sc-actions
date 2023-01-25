@@ -78,7 +78,7 @@ jobs:
 
       - name: Generate the contract report
         run: |
-          sc-meta all build --wasm-symbols --wasm-suffix dbg --no-wasm-opt --no-imports --target-dir $(pwd)/target --path .
+          sc-meta all build --wasm-symbols --wasm-suffix dbg --no-wasm-opt --twiggy-paths --no-imports --target-dir $(pwd)/target --path .
           mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json
 
       - name: Upload the report json
