@@ -143,7 +143,7 @@ jobs:
           image_tag: ${{ inputs.image_tag }}
 
       - name: Upload artifacts to release, edit release notes
-        if: ${{ inputs.attach_to_release == true or inputs.create_release == true }}
+        if: ${{ inputs.attach_to_release == true || inputs.create_release == true }}
         run: |
           gh release edit ${{ github.ref_name }} --notes-file=release_notes.txt
 
