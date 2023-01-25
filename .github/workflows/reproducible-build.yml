@@ -122,6 +122,7 @@ jobs:
           from hashlib import blake2b
           from pathlib import Path
           import os
+          import json
           import urllib.request
 
           logging.basicConfig(level=logging.INFO)
@@ -141,7 +142,7 @@ jobs:
             existing_notes = ""
 
           notes = existing_notes
-          notes = "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}**.\n"
+          notes += "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}**.\n"
           notes += "\n"
           notes+= "## Codehashes (blake2b):\n"
 
