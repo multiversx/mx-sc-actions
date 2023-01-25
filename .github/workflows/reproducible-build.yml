@@ -14,7 +14,7 @@ on:
       create_release:
         type: boolean
         description: Whether to create a new release
-      attach_to_release:
+      attach_to_existing_release:
         type: boolean
         description: Whether to attach output to existing release
 
@@ -34,12 +34,12 @@ jobs:
           image_tag = os.getenv("image_tag", "")
           contract_name = os.getenv("contract_name", "")
           create_release = os.getenv("create_release", "").lower() == "true"
-          attach_to_release = os.getenv("attach_to_release", "").lower() == "true"
+          attach_to_existing_release = os.getenv("attach_to_existing_release", "").lower() == "true"
 
           logging.info(f"Image tag: {image_tag}")
           logging.info(f"Contract name: {contract_name or '*'}")
           logging.info(f"Create new release: {create_release}")
-          logging.info(f"Attach output to existing release: {attach_to_release}")
+          logging.info(f"Attach output to existing release: {attach_to_existing_release}")
 
           if image_tag == "next":
             logging.warning("You've chosen to build the contracts with the image 'multiversx/sdk-rust-contract-builder:next', which is experimental and not recommended for production!")
@@ -47,14 +47,14 @@ jobs:
           if contract_name:
             logging.info(f"One contract will be built: {contract_name}.")
 
-          if create_release and attach_to_release:
+          if create_release and attach_to_existing_release:
             sys.exit("ERROR: Choose either to create a new release, or to attach the build output to an existing release. Can't pick both. Feel free to pick none, though.")
           EOF
         env:
           image_tag: ${{ inputs.image_tag }}
           contract_name: ${{ inputs.contract_name }}
           create_release: ${{ inputs.create_release }}
-          attach_to_release: ${{ inputs.attach_to_release }}
+          attach_to_existing_release: ${{ inputs.attach_to_existing_release }}
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -118,6 +118,7 @@ jobs:
       - name: Create release notes
         run: |
           python3 - << "EOF"
+          import logging
           from hashlib import blake2b
           from pathlib import Path
           import os
@@ -157,7 +158,7 @@ jobs:
           image_tag: ${{ inputs.image_tag }}
 
       - name: Upload artifacts to release, edit release notes
-        if: ${{ inputs.attach_to_release == true || inputs.create_release == true }}
+        if: ${{ inputs.attach_to_existing_release == true || inputs.create_release == true }}
         run: |
           gh release edit ${{ github.ref_name }} --notes-file=release_notes.txt
 
