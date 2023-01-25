@@ -137,7 +137,7 @@ jobs:
           Path("notes.txt").write_text(notes)
           EOF
           
-          gh release create ${{ inputs.tag }} --target=$GITHUB_SHA --prerelease --title="New release" --generate-notes --notes-file=notes.txt
+          gh release create ${{ github.ref_name }} --target=$GITHUB_SHA --prerelease --title="New release: ${{ github.ref_name }}" --generate-notes --notes-file=notes.txt
           
           sleep 10
           
