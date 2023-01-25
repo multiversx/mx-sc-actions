@@ -48,7 +48,7 @@ jobs:
             logging.info(f"One contract will be built: {contract_name}.")
 
           if create_release and attach_to_release:
-            sys.exit("Choose either to create a new release, or to attach the build output to an existing release. Can't pick both. Feel free to pick none, though.")
+            sys.exit("ERROR: Choose either to create a new release, or to attach the build output to an existing release. Can't pick both. Feel free to pick none, though.")
           EOF
         env:
           image_tag: ${{ inputs.image_tag }}
@@ -85,7 +85,7 @@ jobs:
                 missing_cargo_lock = True
             
           if missing_cargo_lock:
-            sys.exit(f"One or more 'wasm/Cargo.lock' files are missing. They are essential for reproducible builds.")
+            sys.exit(f"ERROR: One or more 'wasm/Cargo.lock' files are missing. They are essential for reproducible builds.")
           EOF
 
       - name: Download build script
@@ -120,6 +120,7 @@ jobs:
           python3 - << "EOF"
           from hashlib import blake2b
           from pathlib import Path
+          import os
 
           image_tag = os.getenv("image_tag", "")
 
