@@ -91,9 +91,9 @@ jobs:
       - name: Download build script
         run: |
           # TODO: Fix git tag before review!
-          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/debug-19/build_with_docker.py
+          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/package-19/build_with_docker.py
       
-      - name: Build contract
+      - name: Build contracts
         run: |
           python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=. --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker
       
@@ -105,17 +105,17 @@ jobs:
             /home/runner/work/output-from-docker/**/*.*
           if-no-files-found: error
 
-      - name: Upload artifacts to existing release
-        if: ${{ inputs.attach_to_release == true }}
+      - name: Create new release (if applicable)
+        if: ${{ inputs.create_release == true }}
         run: |
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.source.json -type f)
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/artifacts.json -type f)
+          gh release create ${{ github.ref_name }} --target=$GITHUB_SHA --prerelease --title="New release: ${{ github.ref_name }}" --generate-notes
+          # Give some time for processing the request
+          sleep 10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          image_tag: ${{ inputs.image_tag }}
 
-      - name: Create new release and upload artifacts
-        if: ${{ inputs.create_release == true }}
+      - name: Create release notes
         run: |
           python3 - << "EOF"
           from hashlib import blake2b
@@ -123,6 +123,8 @@ jobs:
           import os
 
           image_tag = os.getenv("image_tag", "")
+
+          # TODO: Fetch current release notes.
 
           notes = "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}**.\n"
           notes += "\n"
@@ -132,18 +134,21 @@ jobs:
             code = wasm_file.read_bytes()
             h = blake2b(digest_size=32)
             h.update(code)
-            notes += f"**{wasm_file}**: `{h.hexdigest()}`"
+            notes += f"**{wasm_file.name}**: `{h.hexdigest()}`"
 
-          Path("notes.txt").write_text(notes)
+          Path("release_notes.txt").write_text(notes)
           EOF
-          
-          gh release create ${{ github.ref_name }} --target=$GITHUB_SHA --prerelease --title="New release: ${{ github.ref_name }}" --generate-notes --notes-file=notes.txt
-          
-          sleep 10
-          
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          image_tag: ${{ inputs.image_tag }}
+
+      - name: Upload artifacts to release, edit release notes
+        if: ${{ inputs.attach_to_release == true or inputs.create_release == true }}
+        run: |
+          gh release edit ${{ github.ref_name }} --notes-file=release_notes.txt
+
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.source.json -type f)
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/artifacts.json -type f)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          image_tag: ${{ inputs.image_tag }}
