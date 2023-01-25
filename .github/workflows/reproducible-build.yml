@@ -57,7 +57,7 @@ jobs:
           attach_to_existing_release: ${{ inputs.attach_to_existing_release }}
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ env.GITHUB_REF_NAME }}
           fetch-depth: 0
@@ -98,7 +98,7 @@ jobs:
           python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=. --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker
       
       - name: Save artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-output
           path: |
