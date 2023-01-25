@@ -91,7 +91,7 @@ jobs:
       - name: Download build script
         run: |
           # TODO: Fix git tag before review!
-          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/package-19/build_with_docker.py
+          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/main/build_with_docker.py
       
       - name: Build contracts
         run: |
@@ -121,11 +121,25 @@ jobs:
           from hashlib import blake2b
           from pathlib import Path
           import os
+          import urllib.request
 
+          logging.basicConfig(level=logging.INFO)
+
+          repository = os.getenv("GITHUB_REPOSITORY")
+          ref_name = os.getenv("GITHUB_REF_NAME")
           image_tag = os.getenv("image_tag", "")
 
-          # TODO: Fetch current release notes.
+          try:
+            logging.info(f"Fetching existing release notes, if any, for repository = {repository}, tag = {ref_name} ...")
+            
+            request = urllib.request.urlopen(f"https://api.github.com/repos/{repository}/releases/tags/{ref_name}")
+            data = json.loads(request.read())
+            existing_notes = data["body"]
+          except Exception as err:
+            logging.info("An error ocurred while fetching existing release notes (perhaps there is no release yet).")
+            existing_notes = ""
 
+          notes = existing_notes
           notes = "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}**.\n"
           notes += "\n"
           notes+= "## Codehashes (blake2b):\n"
