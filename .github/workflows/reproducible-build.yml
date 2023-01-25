@@ -90,8 +90,7 @@ jobs:
 
       - name: Download build script
         run: |
-          # TODO: Fix git tag before review!
-          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/main/build_with_docker.py
+          wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/${{ inputs.image_tag }}/build_with_docker.py
       
       - name: Build contracts
         run: |
@@ -141,7 +140,7 @@ jobs:
             logging.info("An error ocurred while fetching existing release notes (perhaps there is no release yet).")
             existing_notes = ""
 
-          notes = existing_notes
+          notes = existing_notes + "\n"
           notes += "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}**.\n"
           notes += "\n"
           notes+= "## Codehashes (blake2b):\n"

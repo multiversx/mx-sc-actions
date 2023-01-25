@@ -6,7 +6,7 @@ A Github Action for smart contracts which:
 - does a clippy check
 - provides a report containing details about the smart contracts
 
-## Usage
+## Usage of `contracts.yml`
 
 ### Standard build
 
@@ -80,3 +80,7 @@ This can be optionally enabled by specifying:
 install-libtinfo5: true
 ```
 Note: if using a matrix build with multiple operating systems, enable this only for ubuntu.
+
+## Usage of `reproducible-build.yml`
+
+See [contracts.yml](.github/workflows/reproducible-build.yml)
