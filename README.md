@@ -104,8 +104,7 @@ At times, you might want to create a release directly from a Github Workflow. In
 name: Create release, build contracts, upload assets
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -142,8 +141,7 @@ In order to run the reproducible builds on a pull request, without creating or e
 name: Build contracts
 
 on:
-  release:
-    types: [published]
+  pull_request:
 
 jobs:
   build:
@@ -160,8 +158,7 @@ Now, let's select a single contract to be built:
 name: Build contracts
 
 on:
-  release:
-    types: [published]
+  pull_request:
 
 jobs:
   build:
