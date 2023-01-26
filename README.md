@@ -83,7 +83,7 @@ Note: if using a matrix build with multiple operating systems, enable this only 
 
 ## Usage of `reproducible-build.yml`
 
-See [contracts.yml](.github/workflows/reproducible-build.yml).
+See [reproducible-build.yml](.github/workflows/reproducible-build.yml).
 
 ## Configuration entries
 
@@ -106,6 +106,9 @@ name: Create release, build contracts, upload assets
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
@@ -120,6 +123,9 @@ In order to configure your workflow for building the contracts and uploading the
 
 ```
 name: On new release, build contracts, upload assets
+
+permissions:
+  contents: write
 
 on:
   release:
@@ -143,6 +149,9 @@ name: Build contracts
 on:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
@@ -159,6 +168,9 @@ name: Build contracts
 
 on:
   pull_request:
+
+permissions:
+  contents: write
 
 jobs:
   build:

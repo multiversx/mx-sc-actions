@@ -115,6 +115,7 @@ jobs:
           image_tag: ${{ inputs.image_tag }}
 
       - name: Create release notes
+        if: ${{ inputs.attach_to_existing_release == true || inputs.create_release == true }}
         run: |
           python3 - << "EOF"
           import logging
