@@ -2,7 +2,7 @@
 
 A Github Action for smart contracts which:
 - builds the wasm files
-- runs mandos-rs and mandos-go tests
+- runs both the rust and go testing scenarios
 - does a clippy check
 - provides a report containing details about the smart contracts
 
@@ -10,10 +10,7 @@ A Github Action for smart contracts which:
 
 ### Standard build
 
-See [contracts.yml](.github/workflows/contracts.yml)
-This uses fixed versions of rust and vmtools.
-Ignores `eei` checks which allows the contracts to use features which are not live on the elrond mainnet yet.
-
+Create a new file under `.github/workflows/actions.yml` with the following contents:
 ```yml
 name: CI
 
@@ -30,14 +27,16 @@ permissions:
 jobs:
   contracts:
     name: Contracts
-    uses: ElrondNetwork/elrond-actions/.github/workflows/contracts.yml@v1
+    uses: multiversx/mx-sc-actions/.github/workflows/contracts.yml@v2
     with:
-      rust-toolchain: nightly-2022-01-17
-      vmtools-version: v1.4.43
-      extra-build-args: --ignore-eei-checks
+      rust-toolchain: nightly-2022-12-08
+      vmtools-version: v1.4.60
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+This uses fixed versions of rust and vmtools.
+See [contracts.yml](.github/workflows/contracts.yml) for more details on which other arguments are supported.
 
 ### Main branch notes
 
@@ -65,11 +64,11 @@ permissions:
 
 ## Additional options
 
-### Using a custom erdpy version
+### Using a custom mxpy version
 
-The erdpy version can be specified by providing:
+The mxpy version can be specified by providing:
 ```yml
-pip-erdpy-args: erdpy==1.2.3
+pip-mxpy-args: multiversx-sdk-cli==1.2.3
 ```
 
 ### Installing libtinfo5
