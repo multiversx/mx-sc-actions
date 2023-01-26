@@ -92,7 +92,7 @@ The following configuration entries are available:
  - `image_tag`: the desired Docker image tag to be used for the reproducible contract build. The available tags are listed [here](https://hub.docker.com/r/multiversx/sdk-rust-contract-builder/tags).
  - `contract_name`: a specific contract to be built. If not specified, all contracts in the workspace (repository) are built.
  - `create_release`: whether to create a new release (and upload the build artifacts as assets).
- - `attach_to_existing_release`: whether to upload the build artifacts on an existing release. This only works if the current `github.ref_name` (of the executing workflow) associated with an existing release.
+ - `attach_to_existing_release`: whether to upload the build artifacts on an existing release. This only works if the current `github.ref_name` (of the executing workflow) is associated with an existing release.
 
 Note that `create_release` and `attach_to_existing_release` are mutually exclusive.
 
@@ -117,7 +117,7 @@ jobs:
 
 ### Building on an existing release
 
-In order to configure your workflow for building the contracts and attaching the artifacts on a newly created (published) release, do as follows:
+In order to configure your workflow for building the contracts and uploading the output on a newly created (published) release, do as follows:
 
 ```
 name: On new release, build contracts, upload assets
@@ -152,7 +152,7 @@ jobs:
       image_tag: v4.1.0
 ```
 
-Once the workflow finishes, the build artifacts can still be found as workflow artifacts.
+Once the workflow finishes, the build artifacts will be found as workflow artifacts.
 
 Now, let's select a single contract to be built:
 
