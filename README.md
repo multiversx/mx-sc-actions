@@ -6,7 +6,7 @@ A Github Action for smart contracts which:
 - does a clippy check
 - provides a report containing details about the smart contracts
 
-## Usage
+## Usage of `contracts.yml`
 
 ### Standard build
 
@@ -79,3 +79,102 @@ This can be optionally enabled by specifying:
 install-libtinfo5: true
 ```
 Note: if using a matrix build with multiple operating systems, enable this only for ubuntu.
+
+## Usage of `reproducible-build.yml`
+
+See [reproducible-build.yml](.github/workflows/reproducible-build.yml).
+
+## Configuration entries
+
+The following configuration entries are available:
+
+ - `image_tag`: the desired Docker image tag to be used for the reproducible contract build. The available tags are listed [here](https://hub.docker.com/r/multiversx/sdk-rust-contract-builder/tags).
+ - `contract_name`: a specific contract to be built. If not specified, all contracts in the workspace (repository) are built.
+ - `create_release`: whether to create a new release (and upload the build artifacts as assets).
+ - `attach_to_existing_release`: whether to upload the build artifacts on an existing release. This only works if the current `github.ref_name` (of the executing workflow) is associated with an existing release.
+
+Note that `create_release` and `attach_to_existing_release` are mutually exclusive.
+
+## Creating a release from scratch
+
+At times, you might want to create a release directly from a Github Workflow. In order to do so, follow this example:
+
+```
+name: Create release, build contracts, upload assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    with:
+      image_tag: v4.1.0
+      create_release: true
+```
+
+### Building on an existing release
+
+In order to configure your workflow for building the contracts and uploading the output on a newly created (published) release, do as follows:
+
+```
+name: On new release, build contracts, upload assets
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    with:
+      image_tag: v4.1.0
+      attach_to_release: true
+```
+
+### Running reproducible builds on pull requests
+
+In order to run the reproducible builds on a pull request, without creating or editing a GitHub release, do as follows:
+
+```
+name: Build contracts
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    with:
+      image_tag: v4.1.0
+```
+
+Once the workflow finishes, the build artifacts will be found as workflow artifacts.
+
+Now, let's select a single contract to be built:
+
+```
+name: Build contracts
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    with:
+      image_tag: v4.1.0
+      contract_name: adder
+```
