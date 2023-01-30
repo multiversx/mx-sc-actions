@@ -41,10 +41,8 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
-          default: true
           toolchain: ${{ inputs.rust-toolchain }}
           target: wasm32-unknown-unknown
 
@@ -112,7 +110,7 @@ jobs:
 
       - name: Render the report from the template
         id: template
-        uses: chuhlomin/render-template@v1.2
+        uses: chuhlomin/render-template@v1
         if: github.event_name == 'pull_request'
         with:
           template: report.md
@@ -129,7 +127,7 @@ jobs:
 
       - name: Find the comment containing the report
         id: fc
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -137,7 +135,7 @@ jobs:
           body-includes: 'Contract comparison'
 
       - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -150,9 +148,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          default: true
           toolchain: ${{ inputs.rust-toolchain }}
 
       - name: Run the rust tests
@@ -163,12 +160,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
           components: clippy
-          default: true
-      - uses: actions-rs/clippy-check@v1
+      - uses: giraffate/clippy-action@v1
         with:
-          token: ${{ secrets.token }}
-          args: ${{ inputs.clippy-args }}
+          github_token: ${{ secrets.token }}
+          clippy_flags: ${{ inputs.clippy-args }}
+          level: warning
+          filter_mode: nofilter
