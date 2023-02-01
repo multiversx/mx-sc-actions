@@ -141,7 +141,7 @@ jobs:
             logging.info("An error ocurred while fetching existing release notes (perhaps there is no release yet).")
             existing_notes = ""
 
-          notes = existing_notes + "\n"
+          notes = existing_notes + "\n\n"
           notes += "Built using Docker image: **multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}**.\n"
           notes += "\n"
           notes+= "## Codehashes (blake2b):\n"
@@ -150,7 +150,7 @@ jobs:
             code = wasm_file.read_bytes()
             h = blake2b(digest_size=32)
             h.update(code)
-            notes += f"**{wasm_file.name}**: `{h.hexdigest()}`"
+            notes += f"**{wasm_file.name}**: `{h.hexdigest()}`\n"
 
           Path("release_notes.txt").write_text(notes)
           EOF
