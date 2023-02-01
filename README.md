@@ -110,9 +110,9 @@ permissions:
 
 jobs:
   build:
-    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.2.1
     with:
-      image_tag: v4.1.0
+      image_tag: v1.2.3 # this is an example; see above
       create_release: true
 ```
 
@@ -132,9 +132,9 @@ on:
 
 jobs:
   build:
-    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.2.1
     with:
-      image_tag: v4.1.0
+      image_tag: v1.2.3 # this is an example; see above
       attach_to_release: true
 ```
 
@@ -153,9 +153,9 @@ permissions:
 
 jobs:
   build:
-    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.2.1
     with:
-      image_tag: v4.1.0
+      image_tag: v1.2.3 # this is an example; see above
 ```
 
 Once the workflow finishes, the build artifacts will be found as workflow artifacts.
@@ -173,8 +173,8 @@ permissions:
 
 jobs:
   build:
-    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.1.0
+    uses: multiversx/mx-sc-actions/.github/workflows/reproducible-build.yml@v2.2.1
     with:
-      image_tag: v4.1.0
+      image_tag: v1.2.3 # this is an example; see above
       contract_name: adder
 ```
