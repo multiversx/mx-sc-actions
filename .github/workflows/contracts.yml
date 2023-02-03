@@ -69,12 +69,19 @@ jobs:
           sudo apt install -y libtinfo5
 
       - name: Build the wasm contracts
+        env:
+          RUSTFLAGS: ""
         run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
-        run: cargo test --features multiversx-sc-scenario/run-go-tests
+        env:
+          RUSTFLAGS: ""
+        run:
+          cargo test --features multiversx-sc-scenario/run-go-tests
 
       - name: Generate the contract report
+        env:
+          RUSTFLAGS: ""
         run: |
           sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
           mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json
@@ -153,7 +160,10 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
 
       - name: Run the rust tests
-        run: cargo test
+        env:
+          RUSTFLAGS: ""
+        run:
+          cargo test
 
   clippy_check:
     name: Clippy linter check
@@ -165,8 +175,8 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           components: clippy
       - uses: giraffate/clippy-action@v1
+        env:
+          RUSTFLAGS: ""
         with:
           github_token: ${{ secrets.token }}
           clippy_flags: ${{ inputs.clippy-args }}
-          level: warning
-          filter_mode: nofilter
