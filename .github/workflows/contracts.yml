@@ -53,10 +53,8 @@ jobs:
         run: |
           pip3 install ${{ inputs.pip-mxpy-args }}
           mkdir $HOME/multiversx-sdk
-          mxpy deps install vmtools --tag ${{ inputs.vmtools-version }}
-
-          mxpy deps install nodejs
-          mxpy deps install wasm-opt
+          python3 -m multiversx_sdk_cli.cli deps install vmtools --tag ${{ inputs.vmtools-version }}
+          python3 -m multiversx_sdk_cli.cli deps install wasm-opt
 
           cargo install twiggy
 
@@ -84,7 +82,7 @@ jobs:
           RUSTFLAGS: ""
         run: |
           sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
-          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json
+          python3 -m multiversx_sdk_cli.cli contract report --skip-build --skip-twiggy --output-format json --output-file report.json
 
       - name: Upload the report json
         uses: actions/upload-artifact@v3
@@ -109,9 +107,9 @@ jobs:
           if [ ! -f base-report/report.json ]
           then
               echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
-              mxpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
+              python3 -m multiversx_sdk_cli.cli contract report --compare report.json --output-format github-markdown --output-file report-table.md
           else
-              mxpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
+              python3 -m multiversx_sdk_cli.cli contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
           fi
           cat report-table.md >> report.md
 
