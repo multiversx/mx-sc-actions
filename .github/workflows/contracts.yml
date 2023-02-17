@@ -55,6 +55,7 @@ jobs:
           mkdir $HOME/multiversx-sdk
           python3 -m multiversx_sdk_cli.cli deps install vmtools --tag ${{ inputs.vmtools-version }}
           sudo apt install -y binaryen=105-1
+          sudo apt install -y wabt=1.0.27-1
 
           cargo install twiggy
 
