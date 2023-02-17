@@ -15,7 +15,7 @@ on:
         type: string
       pip-mxpy-args:
         description: 'pip mxpy install arguments'
-        default: 'multiversx-sdk-cli'
+        default: 'multiversx-sdk-cli==v6.0.0'
         required: false
         type: string
       clippy-args:
@@ -47,7 +47,7 @@ jobs:
           target: wasm32-unknown-unknown
 
       - name: Setup the PATH variable
-        run: echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$HOME/multiversx-sdk/nodejs/latest/bin:$PATH" >> $GITHUB_ENV
+        run: echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$HOME/multiversx-sdk/wasm-opt/version_105:$PATH" >> $GITHUB_ENV
 
       - name: Install prerequisites
         run: |
