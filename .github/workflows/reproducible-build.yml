@@ -77,6 +77,8 @@ jobs:
 
           logging.basicConfig(level=logging.INFO)
 
+          project_path = os.getenv("project_path", "")
+          logging.info(f"Project path: {project_path}")
           logging.info("Check for missing 'wasm/Cargo.lock' files ...")
 
           missing_cargo_lock = False
@@ -92,6 +94,8 @@ jobs:
           if missing_cargo_lock:
             sys.exit(f"ERROR: One or more 'wasm/Cargo.lock' files are missing. They are essential for reproducible builds.")
           EOF
+        env:
+          project_path: ${{ inputs.project_path }}
 
       - name: Download build script
         run: |
