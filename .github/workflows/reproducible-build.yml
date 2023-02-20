@@ -84,7 +84,7 @@ jobs:
 
           missing_cargo_lock = False
 
-          for cargo_toml in Path(".").rglob("wasm/Cargo.toml"):
+          for cargo_toml in Path(project_path).rglob("wasm/Cargo.toml"):
               cargo_lock = cargo_toml.with_suffix(".lock")
               if cargo_lock.exists():
                 logging.info(f"Found wasm/Cargo.lock: {cargo_lock}")
