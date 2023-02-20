@@ -7,6 +7,11 @@ on:
         type: string
         required: true
         description: Image multiversx/sdk-rust-contract-builder
+      project_path:
+        type: string
+        default: '.'
+        required: false
+        description: A specific project path
       contract_name:
         type: string
         required: false
@@ -94,7 +99,7 @@ jobs:
       
       - name: Build contracts
         run: |
-          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=. --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker
+          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=${{ inputs.project_path }} --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker
       
       - name: Save artifacts
         uses: actions/upload-artifact@v3
