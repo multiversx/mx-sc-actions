@@ -89,6 +89,7 @@ See [reproducible-build.yml](.github/workflows/reproducible-build.yml).
 The following configuration entries are available:
 
  - `image_tag`: the desired Docker image tag to be used for the reproducible contract build. The available tags are listed [here](https://hub.docker.com/r/multiversx/sdk-rust-contract-builder/tags).
+ - `project_path`: the path to the project (workspace) containing the contracts to build. If not specified, the repository folder is used.
  - `contract_name`: a specific contract to be built. If not specified, all contracts in the workspace (repository) are built.
  - `create_release`: whether to create a new release (and upload the build artifacts as assets).
  - `attach_to_existing_release`: whether to upload the build artifacts on an existing release. This only works if the current `github.ref_name` (of the executing workflow) is associated with an existing release.
