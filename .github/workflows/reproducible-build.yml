@@ -72,8 +72,9 @@ jobs:
         run: |
           python3 - << "EOF"
           import logging
-          from pathlib import Path
+          import os
           import sys
+          from pathlib import Path
 
           logging.basicConfig(level=logging.INFO)
 
