@@ -22,6 +22,9 @@ on:
       attach_to_existing_release:
         type: boolean
         description: Whether to attach output to existing release
+      skip_preliminary_checks:
+        type: boolean
+        description: Skip preliminary checks. Never set this in production!
 
 jobs:
   build:
@@ -69,6 +72,7 @@ jobs:
           repository: ${{ env.GITHUB_REPOSITORY }}
 
       - name: Preliminary checks
+        if: ${{ inputs.skip_preliminary_checks == false }}
         run: |
           python3 - << "EOF"
           import logging
