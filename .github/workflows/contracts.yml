@@ -76,7 +76,7 @@ jobs:
         env:
           RUSTFLAGS: ""
         run:
-          cargo test --features multiversx-sc-scenario/run-go-tests
+          python3 -m multiversx_sdk_cli.cli contract test --directory mandos
 
       - name: Generate the contract report
         env:
