@@ -28,6 +28,16 @@ on:
         default: false
         required: false
         type: boolean
+      binaryen-version:
+        description: 'binaryen (wasm-opt) version to use'
+        default: '112-1'
+        required: false
+        type: string
+      wabt-version:
+        description: 'wabt version to use'
+        default: '1.0.27-1'
+        required: false
+        type: string
     secrets:
       token:
         description: 'Github token'
@@ -54,8 +64,8 @@ jobs:
           pip3 install ${{ inputs.pip-mxpy-args }}
           mkdir $HOME/multiversx-sdk
           python3 -m multiversx_sdk_cli.cli deps install vmtools --tag ${{ inputs.vmtools-version }}
-          sudo apt install -y binaryen=105-1
-          sudo apt install -y wabt=1.0.27-1
+          sudo apt install -y binaryen=${{ inputs.binaryen-version }}
+          sudo apt install -y wabt=${{ inputs.wabt-version }}
 
           cargo install twiggy
 
