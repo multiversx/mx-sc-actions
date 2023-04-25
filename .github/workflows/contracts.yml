@@ -76,6 +76,10 @@ jobs:
 
           cargo install multiversx-sc-meta
 
+          which wasm-opt
+          which wasm2wat
+          which run-scenarios
+
       - name: Install libtinfo5
         if: inputs.install-libtinfo5
         run: |
