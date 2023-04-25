@@ -56,6 +56,10 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: wasm32-unknown-unknown
 
+      - name: Setup the PATH variable
+        run: |
+          echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$PATH" >> $GITHUB_ENV
+
       - name: Install prerequisites
         run: |
           pip3 install ${{ inputs.pip-mxpy-args }}
@@ -64,16 +68,13 @@ jobs:
           
           wget -O binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/${{ inputs.binaryen-version }}/binaryen-${{ inputs.binaryen-version }}-x86_64-linux.tar.gz
           tar -xf binaryen.tar.gz
+          cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
 
           sudo apt install -y wabt=${{ inputs.wabt-version }}
 
           cargo install twiggy
 
           cargo install multiversx-sc-meta
-
-      - name: Setup the PATH variable
-        run: |
-          echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:binaryen-${{ inputs.binaryen-version }}:$PATH" >> $GITHUB_ENV
 
       - name: Install libtinfo5
         if: inputs.install-libtinfo5
