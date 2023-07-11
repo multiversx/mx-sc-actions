@@ -188,6 +188,7 @@ jobs:
 
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.wasm -type f)
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.source.json -type f)
+          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/**/*.abi.json -type f)
           gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker/artifacts.json -type f)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
