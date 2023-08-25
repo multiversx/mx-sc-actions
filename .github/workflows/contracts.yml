@@ -79,7 +79,7 @@ jobs:
 
           cargo install twiggy
 
-          if [ [[ -z "${{ inputs.sc-meta-version }}" ]]; ]
+          if [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
               cargo install multiversx-sc-meta
           else
