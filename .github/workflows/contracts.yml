@@ -191,7 +191,7 @@ jobs:
         env:
           RUSTFLAGS: ""
         run:
-          cargo test
+          cargo test --locked
 
   clippy_check:
     name: Clippy linter check
