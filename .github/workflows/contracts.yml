@@ -83,7 +83,7 @@ jobs:
           then
               cargo install multiversx-sc-meta
           else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }}
+              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
           fi
 
           which wasm-opt
