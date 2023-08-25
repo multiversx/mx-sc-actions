@@ -83,7 +83,7 @@ jobs:
           then
               cargo install multiversx-sc-meta
           else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
+              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }}
           fi
 
           which wasm-opt
@@ -99,19 +99,19 @@ jobs:
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
-        run: sc-meta all build --locked --no-imports --target-dir $(pwd)/target --path .
+        run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
         run:
-          cargo test --locked --features multiversx-sc-scenario/run-go-tests
+          cargo test --features multiversx-sc-scenario/run-go-tests
 
       - name: Generate the contract report
         env:
           RUSTFLAGS: ""
         run: |
-          sc-meta all build-dbg --locked --twiggy-paths --target-dir $(pwd)/target --path .
+          sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
           python3 -m multiversx_sdk_cli.cli contract report --skip-build --skip-twiggy --output-format json --output-file report.json
 
       - name: Upload the report json
