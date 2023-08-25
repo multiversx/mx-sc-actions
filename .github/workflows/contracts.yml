@@ -18,6 +18,11 @@ on:
         default: 'multiversx-sdk-cli==v6.0.0'
         required: false
         type: string
+      sc-meta-version:
+        description: 'multiversx-sc-meta version'
+        default: ''
+        required: false
+        type: string
       clippy-args:
         description: 'cargo clippy arguments'
         default: '--all-targets --all-features'
@@ -74,7 +79,12 @@ jobs:
 
           cargo install twiggy
 
-          cargo install multiversx-sc-meta
+          if [[ -z "${{ inputs.sc-meta-version }}" ]];
+          then
+              cargo install multiversx-sc-meta
+          else
+              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }}
+          fi
 
           which wasm-opt
           which wasm2wat
