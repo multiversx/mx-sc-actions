@@ -20,7 +20,7 @@ on:
           type: string
       pip-mxpy-args:
         description: 'pip mxpy install arguments'
-        default: 'multiversx-sdk-cli==v6.0.0'
+        default: 'multiversx-sdk-cli==v8.1.5'
         required: false
         type: string
       sc-meta-version:
