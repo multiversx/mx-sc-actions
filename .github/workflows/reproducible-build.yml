@@ -25,6 +25,9 @@ on:
       skip_preliminary_checks:
         type: boolean
         description: Skip preliminary checks. Never set this in production!
+      package_whole_project_src:
+        type: boolean
+        description: Include all project files in the packaged source (*.source.json) 
 
 jobs:
   build:
@@ -45,6 +48,7 @@ jobs:
           create_release = os.getenv("create_release", "").lower() == "true"
           attach_to_existing_release = os.getenv("attach_to_existing_release", "").lower() == "true"
           skip_preliminary_checks = os.getenv("skip_preliminary_checks", "").lower() == "true"
+          package_whole_project_src = os.getenv("package_whole_project_src", "").lower() == "true"
 
           logging.info(f"Image tag: {image_tag}")
           logging.info(f"Project path: {project_path}")
@@ -52,6 +56,7 @@ jobs:
           logging.info(f"Create new release: {create_release}")
           logging.info(f"Attach output to existing release: {attach_to_existing_release}")
           logging.info(f"Skip preliminary checks: {skip_preliminary_checks}")
+          logging.info(f"Package whole project src: {package_whole_project_src}")
 
           if skip_preliminary_checks:
             logging.warning("You should never set 'skip_preliminary_checks', unless you really know what you are doing!")
@@ -72,6 +77,7 @@ jobs:
           create_release: ${{ inputs.create_release }}
           attach_to_existing_release: ${{ inputs.attach_to_existing_release }}
           skip_preliminary_checks: ${{ inputs.skip_preliminary_checks }}
+          package_whole_project_src: ${{ inputs.package_whole_project_src }}
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -117,7 +123,10 @@ jobs:
       
       - name: Build contracts
         run: |
-          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=${{ inputs.project_path }} --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker
+          if ${{ inputs.package_whole_project_src }}; then
+            flag_package_whole_project_src="--package-whole-project-src"
+          fi
+          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=${{ inputs.project_path }} --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker ${{ flag_package_whole_project_src }}
       
       - name: Save artifacts
         uses: actions/upload-artifact@v3
