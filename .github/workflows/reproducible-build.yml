@@ -123,10 +123,7 @@ jobs:
       
       - name: Build contracts
         run: |
-          if ${{ inputs.package_whole_project_src }}; then
-            flag_package_whole_project_src="--package-whole-project-src"
-          fi
-          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=${{ inputs.project_path }} --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker ${flag_package_whole_project_src}
+          python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=${{ inputs.project_path }} --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker --package-whole-project-src=${{ inputs.package_whole_project_src }}
       
       - name: Save artifacts
         uses: actions/upload-artifact@v3
