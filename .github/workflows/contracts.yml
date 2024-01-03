@@ -20,7 +20,7 @@ on:
           type: string
       pip-mxpy-args:
         description: 'pip mxpy install arguments'
-        default: 'multiversx-sdk-cli==v8.1.5'
+        default: 'multiversx-sdk-cli==v9.2.0'
         required: false
         type: string
       sc-meta-version:
@@ -88,9 +88,9 @@ jobs:
 
           if [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
-              cargo install multiversx-sc-meta
+              cargo install multiversx-sc-meta --locked
           else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }}
+              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
           fi
 
           which wasm-opt
