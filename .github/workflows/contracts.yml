@@ -28,11 +28,6 @@ on:
         default: '--all-targets --all-features'
         required: false
         type: string
-      install-libtinfo5:
-        description: 'install libtinfo5'
-        default: false
-        required: false
-        type: boolean
       binaryen-version:
         description: 'binaryen (wasm-opt) version to use'
         default: 'version_112'
@@ -68,6 +63,13 @@ jobs:
       - name: Install prerequisites
         run: |
           pipx install ${{ inputs.pip-mxpy-args }}
+
+          wget -O binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/${{ inputs.binaryen-version }}/binaryen-${{ inputs.binaryen-version }}-x86_64-linux.tar.gz
+          tar -xf binaryen.tar.gz
+          cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
+
+          sudo apt install -y wabt=${{ inputs.wabt-version }}
+          
           cargo install wasm-opt
           cargo install twiggy
 
