@@ -18,6 +18,11 @@ on:
         default: ''
         required: false
         type: string
+      mx-scenario-go-version:
+        description: 'sc-scenario-go version'
+        default: ''
+        required: false
+        type: string
       path-to-sc-meta:
         description: 'multiversx-sc-meta from local'
         default: ''
@@ -81,7 +86,12 @@ jobs:
               cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
           fi
 
-          sc-meta install mx-scenario-go --tag v2.1.0-alpha
+          if [[ -z "${{ inputs.mx-scenario-go-version }}" ]];
+          then
+              sc-meta install mx-scenario-go
+          else
+              sc-meta install mx-scenario-go --tag ${{ inputs.mx-scenario-go-version }}
+          fi
 
           which mxpy
           which wasm-opt
@@ -196,5 +206,5 @@ jobs:
         env:
           RUSTFLAGS: ""
         with:
-          github_token: ${{ secrets.token }}
+          github_token: ${{ github.token }}
           clippy_flags: ${{ inputs.clippy-args }}
