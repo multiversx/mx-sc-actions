@@ -58,7 +58,7 @@ jobs:
 
       - name: Setup the PATH variable
         run: |
-          echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$PATH" >> $GITHUB_ENV
+          echo "PATH=$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Install prerequisites
         run: |
@@ -69,7 +69,7 @@ jobs:
           cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
 
           sudo apt install -y wabt=${{ inputs.wabt-version }}
-          
+
           cargo install wasm-opt
           cargo install twiggy
 
@@ -85,6 +85,8 @@ jobs:
               cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
           fi
 
+          sc-meta install mx-scenario-go --tag v2.1.0-alpha
+          
           which mxpy
           which wasm-opt
           which mx-scenario-go
