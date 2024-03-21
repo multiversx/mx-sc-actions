@@ -74,7 +74,7 @@ jobs:
           cargo install wasm-opt
           cargo install twiggy
 
-          if [[ -z "${{ inputs.path-to-sc-meta }}" ]];
+          if [[ "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
           fi
