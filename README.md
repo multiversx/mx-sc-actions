@@ -27,15 +27,14 @@ permissions:
 jobs:
   contracts:
     name: Contracts
-    uses: multiversx/mx-sc-actions/.github/workflows/contracts.yml@v2
+    uses: multiversx/mx-sc-actions/.github/workflows/contracts.yml@v3
     with:
-      rust-toolchain: nightly-2022-12-08
-      vmtools-version: v1.4.60
+      rust-toolchain: nightly-2023-12-11
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-This uses fixed versions of rust and vmtools.
+This uses a fixed version of rust.
 See [contracts.yml](.github/workflows/contracts.yml) for more details on which other arguments are supported.
 
 ### Main branch notes
@@ -70,15 +69,6 @@ The mxpy version can be specified by providing:
 ```yml
 pip-mxpy-args: multiversx-sdk-cli==1.2.3
 ```
-
-### Installing libtinfo5
-
-When building smart contracts written in C, on ubuntu, the libtinfo5 has to be installed as clang requires this.
-This can be optionally enabled by specifying:
-```yml
-install-libtinfo5: true
-```
-Note: if using a matrix build with multiple operating systems, enable this only for ubuntu.
 
 ## Usage of `reproducible-build.yml`
 

@@ -8,23 +8,23 @@ on:
         default: 'nightly'
         required: false
         type: string
-      vmtools-version:
-        description: 'vmtools version to use'
-        default: 'latest'
-        required: false
-        type: string
-      vmtools-repository:
-          description: 'vmtools repository to use'
-          default: 'https://github.com/multiversx/mx-chain-vm-go/archive/{TAG}.tar.gz'
-          required: false
-          type: string
       pip-mxpy-args:
         description: 'pip mxpy install arguments'
-        default: 'multiversx-sdk-cli==v9.2.0'
+        default: 'multiversx-sdk-cli==v9.5.2'
         required: false
         type: string
       sc-meta-version:
         description: 'multiversx-sc-meta version'
+        default: ''
+        required: false
+        type: string
+      mx-scenario-go-version:
+        description: 'sc-scenario-go version'
+        default: ''
+        required: false
+        type: string
+      path-to-sc-meta:
+        description: 'multiversx-sc-meta from local'
         default: ''
         required: false
         type: string
@@ -33,11 +33,6 @@ on:
         default: '--all-targets --all-features'
         required: false
         type: string
-      install-libtinfo5:
-        description: 'install libtinfo5'
-        default: false
-        required: false
-        type: boolean
       binaryen-version:
         description: 'binaryen (wasm-opt) version to use'
         default: 'version_112'
@@ -66,25 +61,23 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: wasm32-unknown-unknown
 
-      - name: Setup the PATH variable
-        run: |
-          echo "PATH=$HOME/.local/bin:$HOME/multiversx-sdk/vmtools:$PATH" >> $GITHUB_ENV
-
       - name: Install prerequisites
         run: |
-          pip3 install ${{ inputs.pip-mxpy-args }}
-          mkdir $HOME/multiversx-sdk
-          python3 -m multiversx_sdk_cli.cli config set "dependencies.vmtools.urlTemplate.linux" ${{ inputs.vmtools-repository }}
-          python3 -m multiversx_sdk_cli.cli config set "dependencies.vmtools.tag" ${{ inputs.vmtools-version }}
-          python3 -m multiversx_sdk_cli.cli deps install vmtools --overwrite
-          
+          pipx install ${{ inputs.pip-mxpy-args }}
+
           wget -O binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/${{ inputs.binaryen-version }}/binaryen-${{ inputs.binaryen-version }}-x86_64-linux.tar.gz
           tar -xf binaryen.tar.gz
           cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
 
           sudo apt install -y wabt=${{ inputs.wabt-version }}
 
+          cargo install wasm-opt
           cargo install twiggy
+
+          if [[ "${{ inputs.path-to-sc-meta }}" ]];
+          then
+              cargo install --path ${{ inputs.path-to-sc-meta }}
+          fi
 
           if [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
@@ -93,15 +86,16 @@ jobs:
               cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
           fi
 
-          which wasm-opt
-          which wasm2wat
-          which run-scenarios
+          if [[ -z "${{ inputs.mx-scenario-go-version }}" ]];
+          then
+              sc-meta install mx-scenario-go
+          else
+              sc-meta install mx-scenario-go --tag ${{ inputs.mx-scenario-go-version }}
+          fi
 
-      - name: Install libtinfo5
-        if: inputs.install-libtinfo5
-        run: |
-          sudo apt update
-          sudo apt install -y libtinfo5
+          which mxpy
+          which wasm-opt
+          which mx-scenario-go
 
       - name: Build the wasm contracts
         env:
@@ -111,15 +105,14 @@ jobs:
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
-        run:
-          cargo test --features multiversx-sc-scenario/run-go-tests
+        run: cargo test --features multiversx-sc-scenario/run-go-tests
 
       - name: Generate the contract report
         env:
           RUSTFLAGS: ""
         run: |
           sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
-          python3 -m multiversx_sdk_cli.cli contract report --skip-build --skip-twiggy --output-format json --output-file report.json
+          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json
 
       - name: Upload the report json
         uses: actions/upload-artifact@v3
@@ -144,9 +137,9 @@ jobs:
           if [ ! -f base-report/report.json ]
           then
               echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
-              python3 -m multiversx_sdk_cli.cli contract report --compare report.json --output-format github-markdown --output-file report-table.md
+              mxpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
           else
-              python3 -m multiversx_sdk_cli.cli contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
+              mxpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
           fi
           cat report-table.md >> report.md
 
@@ -213,5 +206,5 @@ jobs:
         env:
           RUSTFLAGS: ""
         with:
-          github_token: ${{ secrets.token }}
+          github_token: ${{ github.token }}
           clippy_flags: ${{ inputs.clippy-args }}
