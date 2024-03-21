@@ -27,12 +27,14 @@ permissions:
 jobs:
   contracts:
     name: Contracts
-    uses: multiversx/mx-sc-actions/.github/workflows/contracts.yml@v3
+    uses: multiversx/mx-sc-actions/.github/workflows/contracts.yml@vMajor.Minor.Patch
     with:
       rust-toolchain: nightly-2023-12-11
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+Preferably use the latest version available from here: https://github.com/multiversx/mx-sc-actions/releases.
 
 This uses a fixed version of rust.
 See [contracts.yml](.github/workflows/contracts.yml) for more details on which other arguments are supported.
