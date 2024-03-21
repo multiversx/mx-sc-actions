@@ -56,10 +56,6 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: wasm32-unknown-unknown
 
-      - name: Setup the PATH variable
-        run: |
-          echo "PATH=$HOME/.local/bin" >> $GITHUB_ENV
-
       - name: Install prerequisites
         run: |
           pipx install ${{ inputs.pip-mxpy-args }}
@@ -86,7 +82,7 @@ jobs:
           fi
 
           sc-meta install mx-scenario-go --tag v2.1.0-alpha
-          
+
           which mxpy
           which wasm-opt
           which mx-scenario-go
