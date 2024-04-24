@@ -18,6 +18,16 @@ on:
         default: ''
         required: false
         type: string
+      sc-meta-git-repo:
+        description: 'multiversx-sc-meta git repo'
+        default: 'https://github.com/multiversx/mx-sdk-rs'
+        required: false
+        type: string
+      sc-meta-git-rev:
+        description: 'multiversx-sc-meta git rev'
+        default: ''
+        required: false
+        type: string
       mx-scenario-go-version:
         description: 'sc-scenario-go version'
         default: ''
@@ -82,6 +92,11 @@ jobs:
           if [[ "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
+          fi
+
+          if [[ "${{ inputs.sc-meta-git-rev }}" ]];
+          then
+              cargo install --git ${{ inputs.sc-meta-git-repo }} --rev ${{ inputs.sc-meta-git-rev }} multiversx-sc-meta
           fi
 
           if [[ -z "${{ inputs.sc-meta-version }}" ]];
