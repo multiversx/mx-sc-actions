@@ -92,14 +92,10 @@ jobs:
           if [[ "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
-          fi
-
-          if [[ "${{ inputs.sc-meta-git-rev }}" ]];
+          elif [[ "${{ inputs.sc-meta-git-rev }}" ]];
           then
               cargo install --git ${{ inputs.sc-meta-git-repo }} --rev ${{ inputs.sc-meta-git-rev }} multiversx-sc-meta
-          fi
-
-          if [[ -z "${{ inputs.sc-meta-version }}" ]];
+          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
               cargo install multiversx-sc-meta --locked
           else
