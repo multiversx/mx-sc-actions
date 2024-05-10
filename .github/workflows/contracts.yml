@@ -158,7 +158,7 @@ jobs:
       - name: Render the report from the template
         id: template
         uses: chuhlomin/render-template@v1
-        if: ${{ github.event_name == 'pull_request' &&  && inputs.enable-contracts-size-report == 'true' }}
+        if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report == 'true' }}
         with:
           template: report.md
           vars: |
