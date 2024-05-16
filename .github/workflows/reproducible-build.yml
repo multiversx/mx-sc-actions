@@ -34,8 +34,14 @@ on:
         required: false
         type: boolean
     secrets:
-      ssh-private-key:
-        description: "SSH private key"
+      hatom-protocol-deploy-pk:
+        description: "Hatom Protocol Deploy SSH private key"
+        required: false
+      hatom-ush-minter-deploy-pk:
+        description: "Hatom USH Minter Deploy SSH private key"
+        required: false
+      hatom-admin-module-deploy-pk:
+        description: "Hatom Admin Module Deploy SSH private key"
         required: false
 
 jobs:
@@ -99,10 +105,33 @@ jobs:
         uses: webfactory/ssh-agent@v0.9.0
         if: inputs.has-private-dependencies
         with:
-          ssh-private-key: ${{ secrets.ssh-private-key }}
+          ssh-private-key: |
+            ${{ secrets.hatom-protocol-deploy-pk }}
+            ${{ secrets.hatom-ush-minter-deploy-pk }}
+            ${{ secrets.hatom-admin-module-deploy-pk }}
 
-      - name: Clone submodules
-        run: git submodule update --init --recursive --remote
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          target: wasm32-unknown-unknown
+
+      - name: Fetch all packages
+        run: |
+          mkdir .cargo
+          shopt -s globstar
+          cargos=($(echo **/Cargo.toml))
+          cargos_s=$(printf -- '-s %s ' "${cargos[@]}")
+          cargo vendor ${cargos_s} > .cargo/config.toml
+
+          # Prevent mx-sdk-rust-contract-builder from bulding vendored dependencies
+          rm -f vendor/**/multiversx.json
+
+          for checksum_file in **/.cargo-checksum.json; do
+            jq 'del(.files."multiversx.json")' "$checksum_file" > "$checksum_file.tmp" && mv "$checksum_file.tmp" "$checksum_file"
+          done
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
 
       - name: Preliminary checks
         if: ${{ inputs.skip_preliminary_checks == false }}
