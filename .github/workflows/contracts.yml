@@ -34,7 +34,7 @@ on:
         required: false
         type: string
       enable-contracts-size-report:
-        description: 'Enable contracts size report'
+        description: "Enable contracts size report"
         default: true
         required: false
         type: boolean
