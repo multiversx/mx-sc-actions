@@ -48,23 +48,12 @@ on:
         default: "1.0.27-1"
         required: false
         type: string
-      has-private-dependencies:
-        description: "Project has private dependencies"
-        default: false
-        required: false
-        type: boolean
     secrets:
       token:
         description: "Github token"
         required: true
-      hatom-protocol-deploy-pk:
-        description: "Hatom Protocol Deploy SSH private key"
-        required: false
-      hatom-ush-minter-deploy-pk:
-        description: "Hatom USH Minter Deploy SSH private key"
-        required: false
-      hatom-admin-module-deploy-pk:
-        description: "Hatom Admin Module Deploy SSH private key"
+      deploy-keys:
+        description: "Deploy SSH private keys"
         required: false
 
 jobs:
@@ -76,12 +65,11 @@ jobs:
 
       - name: Setup Credentials
         uses: webfactory/ssh-agent@v0.9.0
-        if: inputs.has-private-dependencies
+        env:
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
         with:
-          ssh-private-key: |
-            ${{ secrets.hatom-protocol-deploy-pk }}
-            ${{ secrets.hatom-ush-minter-deploy-pk }}
-            ${{ secrets.hatom-admin-module-deploy-pk }}
+          ssh-private-key: ${{ secrets.deploy-keys }}
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -217,12 +205,11 @@ jobs:
 
       - name: Setup Credentials
         uses: webfactory/ssh-agent@v0.9.0
-        if: inputs.has-private-dependencies
+        env:
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
         with:
-          ssh-private-key: |
-            ${{ secrets.hatom-protocol-deploy-pk }}
-            ${{ secrets.hatom-ush-minter-deploy-pk }}
-            ${{ secrets.hatom-admin-module-deploy-pk }}
+          ssh-private-key: ${{ secrets.deploy-keys }}
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -288,12 +275,11 @@ jobs:
 
       - name: Setup Credentials
         uses: webfactory/ssh-agent@v0.9.0
-        if: inputs.has-private-dependencies
+        env:
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
         with:
-          ssh-private-key: |
-            ${{ secrets.hatom-protocol-deploy-pk }}
-            ${{ secrets.hatom-ush-minter-deploy-pk }}
-            ${{ secrets.hatom-admin-module-deploy-pk }}
+          ssh-private-key: ${{ secrets.deploy-keys }}
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:

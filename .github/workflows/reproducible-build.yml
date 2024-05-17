@@ -28,20 +28,9 @@ on:
       package_whole_project_src:
         type: boolean
         description: Include all project files in the packaged source (*.source.json)
-      has-private-dependencies:
-        description: "Project has private dependencies"
-        default: false
-        required: false
-        type: boolean
     secrets:
-      hatom-protocol-deploy-pk:
-        description: "Hatom Protocol Deploy SSH private key"
-        required: false
-      hatom-ush-minter-deploy-pk:
-        description: "Hatom USH Minter Deploy SSH private key"
-        required: false
-      hatom-admin-module-deploy-pk:
-        description: "Hatom Admin Module Deploy SSH private key"
+      deploy-keys:
+        description: "Deploy SSH private keys"
         required: false
 
 jobs:
@@ -103,12 +92,11 @@ jobs:
 
       - name: Setup Credentials
         uses: webfactory/ssh-agent@v0.9.0
-        if: inputs.has-private-dependencies
+        env:
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
         with:
-          ssh-private-key: |
-            ${{ secrets.hatom-protocol-deploy-pk }}
-            ${{ secrets.hatom-ush-minter-deploy-pk }}
-            ${{ secrets.hatom-admin-module-deploy-pk }}
+          ssh-private-key: ${{ secrets.deploy-keys }}
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -116,7 +104,11 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: wasm32-unknown-unknown
 
-      - name: Fetch all packages
+      - name: Vendored dependencies (if private dependencies are used)
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
         run: |
           mkdir .cargo
           shopt -s globstar
@@ -130,8 +122,6 @@ jobs:
           for checksum_file in **/.cargo-checksum.json; do
             jq 'del(.files."multiversx.json")' "$checksum_file" > "$checksum_file.tmp" && mv "$checksum_file.tmp" "$checksum_file"
           done
-        env:
-          CARGO_NET_GIT_FETCH_WITH_CLI: true
 
       - name: Preliminary checks
         if: ${{ inputs.skip_preliminary_checks == false }}
