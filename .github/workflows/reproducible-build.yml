@@ -9,7 +9,7 @@ on:
         description: Image multiversx/sdk-rust-contract-builder
       project_path:
         type: string
-        default: '.'
+        default: "."
         required: false
         description: A specific project path
       contract_name:
@@ -27,7 +27,11 @@ on:
         description: Skip preliminary checks. Never set this in production!
       package_whole_project_src:
         type: boolean
-        description: Include all project files in the packaged source (*.source.json) 
+        description: Include all project files in the packaged source (*.source.json)
+    secrets:
+      deploy-keys:
+        description: "Deploy SSH private keys"
+        required: false
 
 jobs:
   build:
@@ -86,6 +90,42 @@ jobs:
           fetch-depth: 0
           repository: ${{ env.GITHUB_REPOSITORY }}
 
+      - name: Setup Credentials
+        uses: webfactory/ssh-agent@v0.9.0
+        env:
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
+        with:
+          ssh-private-key: ${{ secrets.deploy-keys }}
+
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        env:
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          target: wasm32-unknown-unknown
+
+      - name: Vendored dependencies (if private dependencies are used)
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
+        run: |
+          mkdir .cargo
+          shopt -s globstar
+          cargos=($(echo **/Cargo.toml))
+          cargos_s=$(printf -- '-s %s ' "${cargos[@]}")
+          cargo vendor ${cargos_s} > .cargo/config.toml
+
+          # Prevent mx-sdk-rust-contract-builder from bulding vendored dependencies
+          rm -f vendor/**/multiversx.json
+
+          for checksum_file in **/.cargo-checksum.json; do
+            jq 'del(.files."multiversx.json")' "$checksum_file" > "$checksum_file.tmp" && mv "$checksum_file.tmp" "$checksum_file"
+          done
+
       - name: Preliminary checks
         if: ${{ inputs.skip_preliminary_checks == false }}
         run: |
@@ -110,7 +150,7 @@ jobs:
               else:
                 logging.error(f"wasm/Cargo.lock file not found: {cargo_lock}")
                 missing_cargo_lock = True
-            
+
           if missing_cargo_lock:
             sys.exit(f"ERROR: One or more 'wasm/Cargo.lock' files are missing. They are essential for reproducible builds.")
           EOF
@@ -120,16 +160,16 @@ jobs:
       - name: Download build script
         run: |
           wget https://raw.githubusercontent.com/multiversx/mx-sdk-rust-contract-builder/${{ inputs.image_tag }}/build_with_docker.py
-      
+
       - name: Build contracts
         run: |
           flag_package_whole_project_src=""
           if ${{ inputs.package_whole_project_src }}; then
             flag_package_whole_project_src="--package-whole-project-src"
           fi
-          
+
           python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=${{ inputs.project_path }} --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker ${flag_package_whole_project_src}
-      
+
       - name: Save artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -167,7 +207,7 @@ jobs:
 
           try:
             logging.info(f"Fetching existing release notes, if any, for repository = {repository}, tag = {ref_name} ...")
-            
+
             request = urllib.request.urlopen(f"https://api.github.com/repos/{repository}/releases/tags/{ref_name}")
             data = json.loads(request.read())
             existing_notes = data["body"]
