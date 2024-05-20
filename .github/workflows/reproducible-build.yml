@@ -100,6 +100,9 @@ jobs:
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        env:
+          SUPER_SECRET: ${{ secrets.deploy-keys }}
+        if: ${{ env.SUPER_SECRET != '' }}
         with:
           toolchain: ${{ inputs.rust-toolchain }}
           target: wasm32-unknown-unknown
