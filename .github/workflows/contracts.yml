@@ -122,8 +122,7 @@ jobs:
         env:
           RUSTFLAGS: ""
         run: |
-          sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
-          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json
+          sc-meta code-report --format json --path . --output report.json
 
       - name: Upload the report json
         if: ${{ inputs.enable-contracts-size-report }}
@@ -149,9 +148,9 @@ jobs:
           if [ ! -f base-report/report.json ]
           then
               echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
-              mxpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
+              sc-meta code-report --output report-table.md
           else
-              mxpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
+              sc-meta code-report --compare base-report/report.json --output report-table.md
           fi
           cat report-table.md >> report.md
 
