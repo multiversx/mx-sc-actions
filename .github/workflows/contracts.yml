@@ -132,11 +132,11 @@ jobs:
       - name: Download the base report
         uses: dawidd6/action-download-artifact@v2
         if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        continue-on-error: true
+        continue-on-error: false
         with:
           workflow: actions.yml
           name: report
-          commit: ${{ github.event.pull_request.base.sha  && inputs.enable-contracts-size-report }}
+          commit: ${{ github.event.pull_request.base.sha }}
           path: base-report
 
       - name: Generate the report template
