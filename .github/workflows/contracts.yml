@@ -121,7 +121,7 @@ jobs:
           RUSTFLAGS: ""
         run: |
           sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
-          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json  
+          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file mxpy_report.json  
           
       - name: Generate the contract report via sc-meta
         if: ${{ inputs.enable-contracts-size-report }}
