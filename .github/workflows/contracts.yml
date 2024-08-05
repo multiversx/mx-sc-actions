@@ -115,14 +115,29 @@ jobs:
           RUSTFLAGS: ""
         run: cargo test --features multiversx-sc-scenario/run-go-tests
 
-      - name: Generate the contract report
+      - name: Generate the contract report via mxpy
+        if: ${{ inputs.enable-contracts-size-report }}
+        env:
+          RUSTFLAGS: ""
+        run: |
+          sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
+          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json  
+          
+      - name: Generate the contract report via sc-meta
         if: ${{ inputs.enable-contracts-size-report }}
         env:
           RUSTFLAGS: ""
         run: |
           sc-meta code-report --format json --path . --output report.json
 
-      - name: Upload the report json
+      - name: Upload the report json from mxpy
+        if: ${{ inputs.enable-contracts-size-report }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: mxpy_report
+          path: mxpy_report.json      
+          
+      - name: Upload the report json from sc-meta
         if: ${{ inputs.enable-contracts-size-report }}
         uses: actions/upload-artifact@v3
         with:
@@ -132,7 +147,7 @@ jobs:
       - name: Download the base report
         uses: dawidd6/action-download-artifact@v2
         if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        continue-on-error: false
+        continue-on-error: true
         with:
           workflow: actions.yml
           name: report
@@ -146,9 +161,9 @@ jobs:
           if [ ! -f base-report/report.json ]
           then
               echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
-              sc-meta code-report --output report-table.md
+              sc-meta code-report --compare report.json --output report-table.md
           else
-              sc-meta code-report --compare base-report/report.json --output report-table.md
+              sc-meta code-report --compare report.json --compare base-report/report.json --output report-table.md
           fi
           cat report-table.md >> report.md
 
