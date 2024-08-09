@@ -128,7 +128,7 @@ jobs:
         env:
           RUSTFLAGS: ""
         run: |
-          sc-meta code-report --format json --path . --output report.json
+          sc-meta report compile --path . --output report.json
 
       - name: Upload the report json from mxpy
         if: ${{ inputs.enable-contracts-size-report }}
@@ -158,13 +158,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request'  && inputs.enable-contracts-size-report }}
         run: |
           echo "Contract comparison - from {{ .base }} to {{ .head }}" > report.md
-          if [ ! -f base-report/report.json ]
-          then
-              echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
-              sc-meta code-report --compare report.json --output report-table.md
-          else
-              sc-meta code-report --compare report.json --compare base-report/report.json --output report-table.md
-          fi
+          sc-meta report compare --baseline base-report/report.json --new report.json --output report-table.md
           cat report-table.md >> report.md
 
       - name: Render the report from the template
