@@ -87,9 +87,7 @@ jobs:
           if [[ "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
-          fi
-
-          if [[ -z "${{ inputs.sc-meta-version }}" ]];
+          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
               cargo install multiversx-sc-meta --locked
           else
@@ -117,15 +115,29 @@ jobs:
           RUSTFLAGS: ""
         run: cargo test --features multiversx-sc-scenario/run-go-tests
 
-      - name: Generate the contract report
+      - name: Generate the contract report via mxpy
         if: ${{ inputs.enable-contracts-size-report }}
         env:
           RUSTFLAGS: ""
         run: |
           sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
-          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file report.json
+          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file mxpy_report.json  
+          
+      - name: Generate the contract report via sc-meta
+        if: ${{ inputs.enable-contracts-size-report }}
+        env:
+          RUSTFLAGS: ""
+        run: |
+          sc-meta report compile --path . --output report.json
 
-      - name: Upload the report json
+      - name: Upload the report json from mxpy
+        if: ${{ inputs.enable-contracts-size-report }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: mxpy_report
+          path: mxpy_report.json      
+          
+      - name: Upload the report json from sc-meta
         if: ${{ inputs.enable-contracts-size-report }}
         uses: actions/upload-artifact@v3
         with:
@@ -139,20 +151,14 @@ jobs:
         with:
           workflow: actions.yml
           name: report
-          commit: ${{ github.event.pull_request.base.sha  && inputs.enable-contracts-size-report }}
+          commit: ${{ github.event.pull_request.base.sha }}
           path: base-report
 
       - name: Generate the report template
         if: ${{ github.event_name == 'pull_request'  && inputs.enable-contracts-size-report }}
         run: |
           echo "Contract comparison - from {{ .base }} to {{ .head }}" > report.md
-          if [ ! -f base-report/report.json ]
-          then
-              echo ":warning: Warning: Could not download the report for the base branch. Displaying only the report for the current branch. :warning:" >> report.md
-              mxpy contract report --compare report.json --output-format github-markdown --output-file report-table.md
-          else
-              mxpy contract report --compare base-report/report.json report.json --output-format github-markdown --output-file report-table.md
-          fi
+          sc-meta report compare --baseline base-report/report.json --new report.json --output report-table.md
           cat report-table.md >> report.md
 
       - name: Render the report from the template
@@ -212,9 +218,7 @@ jobs:
           if [[ "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
-          fi
-
-          if [[ -z "${{ inputs.sc-meta-version }}" ]];
+          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
               cargo install multiversx-sc-meta --locked
           else
