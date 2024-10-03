@@ -268,7 +268,7 @@ jobs:
         env:
           RUSTFLAGS: ""
         run:
-          cargo test
+          make slow-tests
 
   clippy_check:
     name: Clippy linter check
