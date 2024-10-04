@@ -264,6 +264,11 @@ jobs:
         with:
           toolchain: ${{ inputs.rust-toolchain }}
 
+      - name: Build the wasm contracts
+        env:
+          RUSTFLAGS: ""
+        run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
+
       - name: Run the rust tests
         env:
           RUSTFLAGS: ""
