@@ -8,11 +8,6 @@ on:
         default: 'nightly'
         required: false
         type: string
-      pip-mxpy-args:
-        description: 'pip mxpy install arguments'
-        default: 'multiversx-sdk-cli==v9.7.0'
-        required: false
-        type: string
       sc-meta-version:
         description: 'multiversx-sc-meta version'
         default: ''
@@ -73,8 +68,6 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          pipx install ${{ inputs.pip-mxpy-args }}
-
           wget -O binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/${{ inputs.binaryen-version }}/binaryen-${{ inputs.binaryen-version }}-x86_64-linux.tar.gz
           tar -xf binaryen.tar.gz
           cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
@@ -101,7 +94,6 @@ jobs:
               sc-meta install mx-scenario-go --tag ${{ inputs.mx-scenario-go-version }}
           fi
 
-          which mxpy
           which wasm-opt
           which mx-scenario-go
 
@@ -115,14 +107,6 @@ jobs:
           RUSTFLAGS: ""
         run: cargo test --features multiversx-sc-scenario/run-go-tests
 
-      - name: Generate the contract report via mxpy
-        if: ${{ inputs.enable-contracts-size-report }}
-        env:
-          RUSTFLAGS: ""
-        run: |
-          sc-meta all build-dbg --twiggy-paths --target-dir $(pwd)/target --path .
-          mxpy contract report --skip-build --skip-twiggy --output-format json --output-file mxpy_report.json  
-          
       - name: Generate the contract report via sc-meta
         if: ${{ inputs.enable-contracts-size-report }}
         env:
@@ -130,13 +114,6 @@ jobs:
         run: |
           sc-meta report compile --path . --output report.json
 
-      - name: Upload the report json from mxpy
-        if: ${{ inputs.enable-contracts-size-report }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: mxpy_report
-          path: mxpy_report.json      
-          
       - name: Upload the report json from sc-meta
         if: ${{ inputs.enable-contracts-size-report }}
         uses: actions/upload-artifact@v3
