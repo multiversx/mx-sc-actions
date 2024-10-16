@@ -214,7 +214,7 @@ jobs:
       - name: Run the interactor tests
         env:
           RUSTFLAGS: ""
-        run: make slow-tests
+        run: make chain-simulator
 
   test_coverage:
     name: Test Coverage
