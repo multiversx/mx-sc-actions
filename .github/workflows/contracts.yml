@@ -164,6 +164,49 @@ jobs:
           body: ${{ steps.template.outputs.result }}
           edit-mode: replace
 
+  interactor_tests:
+    name: Interactor tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          target: wasm32-unknown-unknown
+
+      - name: Install prerequisites
+        run: |
+          wget -O binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/${{ inputs.binaryen-version }}/binaryen-${{ inputs.binaryen-version }}-x86_64-linux.tar.gz
+          tar -xf binaryen.tar.gz
+          cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
+
+          cargo install wasm-opt
+          cargo install twiggy
+
+          if [[ "${{ inputs.path-to-sc-meta }}" ]];
+          then
+              cargo install --path ${{ inputs.path-to-sc-meta }}
+          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
+          then
+              cargo install multiversx-sc-meta --locked
+          else
+              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
+          fi
+
+          which wasm-opt
+
+      - name: Build the wasm contracts
+        env:
+          RUSTFLAGS: ""
+        run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
+
+      - name: Run the interactor tests
+        env:
+          RUSTFLAGS: ""
+        run: make chain-simulator
+
   test_coverage:
     name: Test Coverage
     runs-on: ubuntu-latest
@@ -235,8 +278,7 @@ jobs:
       - name: Run the rust tests
         env:
           RUSTFLAGS: ""
-        run:
-          cargo test
+        run: cargo test
 
   clippy_check:
     name: Clippy linter check
