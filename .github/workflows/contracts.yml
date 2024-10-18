@@ -38,11 +38,6 @@ on:
         default: '--output ./coverage.md'
         required: false
         type: string
-      binaryen-version:
-        description: 'binaryen (wasm-opt) version to use'
-        default: 'version_112'
-        required: false
-        type: string
       wabt-version:
         description: 'wabt version to use'
         default: '1.0.27-1'
@@ -68,10 +63,6 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          wget -O binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/${{ inputs.binaryen-version }}/binaryen-${{ inputs.binaryen-version }}-x86_64-linux.tar.gz
-          tar -xf binaryen.tar.gz
-          cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
-
           sudo apt install -y wabt=${{ inputs.wabt-version }}
 
           cargo install wasm-opt
