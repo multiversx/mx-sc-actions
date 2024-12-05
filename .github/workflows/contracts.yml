@@ -178,10 +178,6 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          wget -O binaryen.tar.gz https://github.com/WebAssembly/binaryen/releases/download/${{ inputs.binaryen-version }}/binaryen-${{ inputs.binaryen-version }}-x86_64-linux.tar.gz
-          tar -xf binaryen.tar.gz
-          cp binaryen-${{ inputs.binaryen-version }}/bin/wasm-opt $HOME/.local/bin
-
           cargo install wasm-opt
           cargo install twiggy
 
