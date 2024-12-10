@@ -206,7 +206,14 @@ jobs:
       - name: Run the interactor tests
         env:
           RUSTFLAGS: ""
-        run: sc-meta cs start & sc-meta test -c
+        run: |
+          output=$(sc-meta test -c 2>&1)
+          if echo "$output" | grep -q "none of the selected packages contains these features: chain-simulator-tests"; then
+              echo "None of the selected packages contains chain-simulator-tests"
+              exit 0
+          elif echo "$output" | grep -q "2: Connection refused (os error 111)"; then
+              sc-meta cs start & sc-meta test -c
+          fi
 
       - name: Stop the chain simulator
         env:
