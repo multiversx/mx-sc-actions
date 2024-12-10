@@ -198,10 +198,25 @@ jobs:
           RUSTFLAGS: ""
         run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
+      - name: Pull latest chain simulator docker image
+        env:
+          RUSTFLAGS: ""
+        run: sc-meta cs install
+
+      - name: Start the chain-simulator
+        env:
+          RUSTFLAGS: ""
+        run: sc-meta cs start
+
       - name: Run the interactor tests
         env:
           RUSTFLAGS: ""
-        run: make chain-simulator
+        run: sc-meta test -c
+
+      - name: Stop the chain simulator
+        env:
+          RUSTFLAGS: ""
+        run: sc-meta cs stop
 
   test_coverage:
     name: Test Coverage
