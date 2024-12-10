@@ -203,15 +203,10 @@ jobs:
           RUSTFLAGS: ""
         run: sc-meta cs install
 
-      - name: Start the chain-simulator
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs start
-
       - name: Run the interactor tests
         env:
           RUSTFLAGS: ""
-        run: sc-meta test -c
+        run: sc-meta cs start & sc-meta test -c
 
       - name: Stop the chain simulator
         env:
