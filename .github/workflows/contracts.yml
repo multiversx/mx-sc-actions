@@ -207,13 +207,7 @@ jobs:
         continue-on-error: false  
         env:
           RUSTFLAGS: ""
-        run: |
-          set +e
-          output=$(sc-meta cs start & sc-meta test -c 2>&1)
-          if echo "$output" | grep -q "none of the selected packages contains these features: chain-simulator-tests"; then
-              echo "None of the selected packages contains chain-simulator-tests"
-              exit 0
-          fi
+        run: sc-meta cs start & sc-meta test -c
 
       - name: Stop the chain simulator
         env:
