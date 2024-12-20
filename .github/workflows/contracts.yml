@@ -8,6 +8,11 @@ on:
         default: 'nightly'
         required: false
         type: string
+      sc-meta-hash-git:
+        description: 'multiversx-sc-meta git commit hash'
+        default: ''
+        required: false
+        type: string
       sc-meta-version:
         description: 'multiversx-sc-meta version'
         default: ''
@@ -181,7 +186,13 @@ jobs:
           cargo install wasm-opt
           cargo install twiggy
 
-          if [[ "${{ inputs.path-to-sc-meta }}" ]];
+          if [[ -n "${{ inputs.sc-meta-hash-git }}" ]];
+          then
+              git clone https://github.com/multiversx/mx-sdk-rs.git sdk
+              cd sdk/ && git checkout ${{ inputs.sc-meta-hash-git }}
+              cargo install --path $(pwd)/framework/meta
+              cd .. && rm -rf sdk
+          elif [[ "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
           elif [[ -z "${{ inputs.sc-meta-version }}" ]];
@@ -198,10 +209,21 @@ jobs:
           RUSTFLAGS: ""
         run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
-      - name: Run the interactor tests
+      - name: Pull latest chain simulator docker image
         env:
           RUSTFLAGS: ""
-        run: make chain-simulator
+        run: sc-meta cs install
+
+      - name: Run the interactor tests
+        continue-on-error: false  
+        env:
+          RUSTFLAGS: ""
+        run: sc-meta cs start & sc-meta test -c
+
+      - name: Stop the chain simulator
+        env:
+          RUSTFLAGS: ""
+        run: sc-meta cs stop
 
   test_coverage:
     name: Test Coverage
