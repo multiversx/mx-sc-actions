@@ -43,11 +43,6 @@ on:
         default: '--output ./coverage.md'
         required: false
         type: string
-      wabt-version:
-        description: 'wabt version to use'
-        default: '1.0.27-1'
-        required: false
-        type: string
     secrets:
       token:
         description: 'Github token'
@@ -68,8 +63,6 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          sudo apt install -y wabt=${{ inputs.wabt-version }}
-
           cargo install wasm-opt
           cargo install twiggy
 
