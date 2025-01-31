@@ -131,7 +131,7 @@ jobs:
           python3 ./build_with_docker.py --no-docker-tty --image=multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }} --project=${{ inputs.project_path }} --contract=${{ inputs.contract_name }} --output=/home/runner/work/output-from-docker ${flag_package_whole_project_src}
       
       - name: Save artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: |

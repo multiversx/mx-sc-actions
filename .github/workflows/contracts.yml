@@ -132,14 +132,14 @@ jobs:
 
       - name: Upload the report json from mxpy
         if: ${{ inputs.enable-contracts-size-report }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mxpy_report
           path: mxpy_report.json      
           
       - name: Upload the report json from sc-meta
         if: ${{ inputs.enable-contracts-size-report }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: report
           path: report.json
@@ -172,7 +172,7 @@ jobs:
             head: ${{ github.event.pull_request.head.sha }}
 
       - name: Upload the report markdown
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
         with:
           name: report-markdown
@@ -232,7 +232,7 @@ jobs:
           sc-meta test-coverage ${{ inputs.coverage-args }}
 
       - name: Upload the report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage.md
