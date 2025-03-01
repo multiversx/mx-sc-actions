@@ -113,11 +113,11 @@ jobs:
           SUPER_SECRET: ${{ secrets.deploy-keys }}
         if: ${{ env.SUPER_SECRET != '' }}
         run: |
-          mkdir .cargo
+          mkdir -p .cargo
           shopt -s globstar
           cargos=($(echo **/Cargo.toml))
           cargos_s=$(printf -- '-s %s ' "${cargos[@]}")
-          cargo vendor ${cargos_s} > .cargo/config.toml
+          cargo vendor ${cargos_s} >> .cargo/config.toml
 
           # Prevent mx-sdk-rust-contract-builder from bulding vendored dependencies
           rm -f vendor/**/multiversx.json
