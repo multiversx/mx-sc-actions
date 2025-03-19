@@ -5,7 +5,7 @@ on:
     inputs:
       rust-toolchain:
         description: 'Rust toolchain to use'
-        default: 'nightly'
+        default: 'stable'
         required: false
         type: string
       sc-meta-hash-git:
