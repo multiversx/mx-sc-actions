@@ -48,7 +48,7 @@ on:
         default: '--output ./coverage.md'
         required: false
         type: string
-      env-var:
+      logger:
         description: 'Environment variable'
         default: ''
         required: false
@@ -104,7 +104,7 @@ jobs:
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
-          ENV_VAR: ${{ inputs.env-var }}
+          RUST_LOG: ${{ inputs.logger }}
         run: cargo test --features multiversx-sc-scenario/run-go-tests
 
       - name: Generate the contract report
