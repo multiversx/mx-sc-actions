@@ -53,11 +53,6 @@ on:
         default: ''
         required: false
         type: string      
-      rust-backtrace:
-        description: 'Environment for rust backtrace'
-        default: ''
-        required: false
-        type: string
     secrets:
       token:
         description: 'Github token'
@@ -110,7 +105,6 @@ jobs:
         env:
           RUSTFLAGS: ""
           RUST_LOG: ${{ inputs.logger }}
-          RUST_BACKTRACE: ${{ inputs.rust-backtrace }}
         run: cargo test --features multiversx-sc-scenario/run-go-tests
 
       - name: Generate the contract report
