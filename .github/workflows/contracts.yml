@@ -48,6 +48,11 @@ on:
         default: '--output ./coverage.md'
         required: false
         type: string
+      logger:
+        description: 'Environment for rust logger'
+        default: ''
+        required: false
+        type: string      
     secrets:
       token:
         description: 'Github token'
@@ -99,6 +104,7 @@ jobs:
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
+          RUST_LOG: ${{ inputs.logger }}
         run: cargo test --features multiversx-sc-scenario/run-go-tests
 
       - name: Generate the contract report
