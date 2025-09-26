@@ -48,6 +48,11 @@ on:
         default: '--output ./coverage.md'
         required: false
         type: string
+      enable-check-build:
+        description: 'Enable check build for all targets'
+        default: true
+        required: false
+        type: boolean
     secrets:
       token:
         description: 'Github token'
@@ -90,6 +95,12 @@ jobs:
 
           which wasm-opt
           which mx-scenario-go
+
+      - name: Check all targets build
+        if: ${{ inputs.enable-check-build }}
+        env:
+          RUSTFLAGS: "-D warnings"
+        run: cargo check --workspace --all-targets --all-features
 
       - name: Build the wasm contracts
         env:
@@ -214,7 +225,7 @@ jobs:
         run: sc-meta cs install
 
       - name: Run the interactor tests
-        continue-on-error: false  
+        continue-on-error: false
         env:
           RUSTFLAGS: ""
         run: sc-meta cs start & cargo test --features chain-simulator-tests
