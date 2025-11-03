@@ -4,8 +4,13 @@ on:
   workflow_call:
     inputs:
       rust-toolchain:
-        description: 'Rust toolchain to use'
-        default: 'nightly'
+        description: "Rust toolchain to use"
+        default: "stable"
+        required: false
+        type: string
+      rust-target:
+        description: "Rust target to use"
+        default: "wasm32-unknown-unknown"
         required: false
         type: string
       sc-meta-hash-git:
@@ -64,11 +69,29 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: wasm32-unknown-unknown
+          target: ${{ inputs.rust-target }}
+
+        # Cache the binaries installed by cargo and apt
+      - name: Cache CI binaries
+        id: cache-binaries
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            /usr/bin/wasm-opt
+          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-binaries-
+
+      - name: Add cached cargo binaries to PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install prerequisites
+        if: steps.cache-binaries.outputs.cache-hit != 'true'
         run: |
-          cargo install wasm-opt
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+
           cargo install twiggy
 
           if [[ "${{ inputs.path-to-sc-meta }}" ]];
@@ -178,11 +201,27 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: wasm32-unknown-unknown
+          target: ${{ inputs.rust-target }}
+
+      - name: Cache CI binaries
+        id: cache-binaries
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            /usr/bin/wasm-opt
+          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-binaries-
+
+      - name: Add cached cargo binaries to PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Install prerequisites
         run: |
-          cargo install wasm-opt
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+
           cargo install twiggy
 
           if [[ -n "${{ inputs.sc-meta-hash-git }}" ]];
@@ -214,7 +253,7 @@ jobs:
         run: sc-meta cs install
 
       - name: Run the interactor tests
-        continue-on-error: false  
+        continue-on-error: false
         env:
           RUSTFLAGS: ""
         run: sc-meta cs start & cargo test --features chain-simulator-tests
@@ -234,7 +273,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: wasm32-unknown-unknown
+          target: ${{ inputs.rust-target }}
 
       - name: Install prerequisites
         run: |
