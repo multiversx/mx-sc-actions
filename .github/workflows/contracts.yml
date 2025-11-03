@@ -14,74 +14,74 @@ on:
         required: false
         type: string
       sc-meta-hash-git:
-        description: 'multiversx-sc-meta git commit hash'
-        default: ''
+        description: "multiversx-sc-meta git commit hash"
+        default: ""
         required: false
         type: string
       sc-meta-version:
-        description: 'multiversx-sc-meta version'
-        default: ''
+        description: "multiversx-sc-meta version"
+        default: ""
         required: false
         type: string
       mx-scenario-go-version:
-        description: 'sc-scenario-go version'
-        default: ''
+        description: "sc-scenario-go version"
+        default: ""
         required: false
         type: string
       path-to-sc-meta:
-        description: 'multiversx-sc-meta from local'
-        default: ''
+        description: "multiversx-sc-meta from local"
+        default: ""
         required: false
         type: string
       clippy-args:
-        description: 'cargo clippy arguments'
-        default: '--all-targets --all-features'
+        description: "cargo clippy arguments"
+        default: "--all-targets --all-features"
         required: false
         type: string
       enable-contracts-size-report:
-        description: 'Enable contracts size report'
+        description: "Enable contracts size report"
         default: true
         required: false
         type: boolean
       enable-interactor-tests:
-        description: 'Enable interactor tests'
+        description: "Enable interactor tests"
         default: false
         required: false
         type: boolean
       coverage-args:
-        description: 'sc-meta test-coverage arguments'
-        default: '--output ./coverage.md'
+        description: "sc-meta test-coverage arguments"
+        default: "--output ./coverage.md"
         required: false
         type: string
     secrets:
       token:
-        description: 'Github token'
+        description: "Github token"
         required: true
 
 jobs:
-  wasm_test:
-    name: Wasm tests
+  setup:
+    name: Setup Environment
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-        # Cache the binaries installed by cargo and apt
-      - name: Cache CI binaries
+      - name: Cache cargo registry and build
         id: cache-binaries
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin
-            /usr/bin/wasm-opt
-          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-binaries-
+            ${{ runner.os }}-cargo-
 
       - name: Add cached cargo binaries to PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
@@ -89,9 +89,7 @@ jobs:
       - name: Install prerequisites
         if: steps.cache-binaries.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y binaryen
-
+          sudo apt-get update && sudo apt-get install -y binaryen
           cargo install twiggy
 
           if [[ "${{ inputs.path-to-sc-meta }}" ]];
@@ -113,6 +111,45 @@ jobs:
 
           which wasm-opt
           which mx-scenario-go
+
+  wasm_test:
+    name: Wasm tests
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          target: ${{ inputs.rust-target }}
+
+      - name: Cache CI binaries
+        id: cache-binaries
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            /usr/bin/wasm-opt
+            key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+            restore-keys: |
+              ${{ runner.os }}-binaries-
+
+      - name: Add cached cargo binaries to PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Build the wasm contracts
         env:
@@ -178,8 +215,8 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: 'Contract comparison'
+          comment-author: "github-actions[bot]"
+          body-includes: "Contract comparison"
 
       - name: Create or update the report comment
         uses: peter-evans/create-or-update-comment@v2
@@ -192,6 +229,7 @@ jobs:
 
   interactor_tests:
     name: Interactor tests
+    needs: setup
     runs-on: ubuntu-latest
     if: inputs.enable-interactor-tests
     steps:
@@ -210,37 +248,24 @@ jobs:
           path: |
             ~/.cargo/bin
             /usr/bin/wasm-opt
-          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-binaries-
+            key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+            restore-keys: |
+              ${{ runner.os }}-binaries-
 
       - name: Add cached cargo binaries to PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install prerequisites
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y binaryen
-
-          cargo install twiggy
-
-          if [[ -n "${{ inputs.sc-meta-hash-git }}" ]];
-          then
-              git clone https://github.com/multiversx/mx-sdk-rs.git sdk
-              cd sdk/ && git checkout ${{ inputs.sc-meta-hash-git }}
-              cargo install --path $(pwd)/framework/meta
-              cd .. && rm -rf sdk
-          elif [[ "${{ inputs.path-to-sc-meta }}" ]];
-          then
-              cargo install --path ${{ inputs.path-to-sc-meta }}
-          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
-          then
-              cargo install multiversx-sc-meta --locked
-          else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
-          fi
-
-          which wasm-opt
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Build the wasm contracts
         env:
@@ -265,6 +290,7 @@ jobs:
 
   test_coverage:
     name: Test Coverage
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -275,22 +301,31 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Install prerequisites
-        run: |
-          rustup component add llvm-tools-preview
-          dirname $(find ~/.rustup -name llvm-cov) >> $GITHUB_PATH
+      - name: Cache CI binaries
+        id: cache-binaries
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            /usr/bin/wasm-opt
+          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-binaries-
 
-          echo $(dirname $(find ~/.rustup -name llvm-cov))
+      - name: Add cached cargo binaries to PATH
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-          if [[ "${{ inputs.path-to-sc-meta }}" ]];
-          then
-              cargo install --path ${{ inputs.path-to-sc-meta }}
-          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
-          then
-              cargo install multiversx-sc-meta --locked
-          else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
-          fi
+      - name: Cache Cargo build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Run tests and generate report
         env:
