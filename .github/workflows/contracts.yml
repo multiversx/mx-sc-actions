@@ -132,9 +132,9 @@ jobs:
           path: |
             ~/.cargo/bin
             /usr/bin/wasm-opt
-            key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
-            restore-keys: |
-              ${{ runner.os }}-binaries-
+          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-binaries-
 
       - name: Add cached cargo binaries to PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
@@ -248,9 +248,9 @@ jobs:
           path: |
             ~/.cargo/bin
             /usr/bin/wasm-opt
-            key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
-            restore-keys: |
-              ${{ runner.os }}-binaries-
+          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-binaries-
 
       - name: Add cached cargo binaries to PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
