@@ -75,13 +75,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git/db
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ~/.cargo/bin
+            /usr/bin/wasm-opt
+          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}-${{ inputs.sc-meta-version }}-${{ inputs.mx-scenario-go-version }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-binaries-
 
       - name: Add cached cargo binaries to PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
@@ -132,7 +130,7 @@ jobs:
           path: |
             ~/.cargo/bin
             /usr/bin/wasm-opt
-          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}-${{ inputs.sc-meta-version }}-${{ inputs.mx-scenario-go-version }}
           restore-keys: |
             ${{ runner.os }}-binaries-
 
@@ -147,9 +145,9 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-build-
 
       - name: Build the wasm contracts
         env:
