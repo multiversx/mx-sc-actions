@@ -325,6 +325,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Install LLVM
+        run: |
+          rustup component add llvm-tools-preview
+          dirname $(find ~/.rustup -name llvm-cov) >> $GITHUB_PATH
+          echo $(dirname $(find ~/.rustup -name llvm-cov))
+
       - name: Run tests and generate report
         env:
           RUSTFLAGS: ""
