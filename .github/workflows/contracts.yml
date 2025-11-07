@@ -131,9 +131,7 @@ jobs:
           name: sc-meta
 
       - name: Make sc-meta executable
-        run: |
-          chmod +x sc-meta
-          sudo mv sc-meta /usr/local/bin/
+        run: sudo mv sc-meta /usr/local/bin/
 
       - name: Build the wasm contracts
         env:
