@@ -70,22 +70,7 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Cache cargo registry and build
-        id: cache-binaries
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin
-            /usr/bin/wasm-opt
-          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}-${{ inputs.sc-meta-version }}-${{ inputs.mx-scenario-go-version }}
-          restore-keys: |
-            ${{ runner.os }}-binaries-
-
-      - name: Add cached cargo binaries to PATH
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
       - name: Install prerequisites
-        if: steps.cache-binaries.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update && sudo apt-get install -y binaryen
           cargo install twiggy
@@ -123,32 +108,6 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Cache CI binaries
-        id: cache-binaries
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin
-            /usr/bin/wasm-opt
-          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}-${{ inputs.sc-meta-version }}-${{ inputs.mx-scenario-go-version }}
-          restore-keys: |
-            ${{ runner.os }}-binaries-
-
-      - name: Add cached cargo binaries to PATH
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Cache Cargo build
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git/db
-            target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
-
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
@@ -157,7 +116,7 @@ jobs:
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
-        run: cargo test --features multiversx-sc-scenario/run-go-tests
+        run: sc-meta test --go
 
       - name: Generate the contract report
         if: ${{ inputs.enable-contracts-size-report }}
