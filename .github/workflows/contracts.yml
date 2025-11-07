@@ -93,13 +93,14 @@ jobs:
           fi
 
           which wasm-opt
+          which sc-meta
           which mx-scenario-go
 
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v4
         with:
           name: sc-meta
-          path: target/release/sc-meta
+          path: /home/runner/.cargo/bin/sc-meta
           retention-days: 1
           overwrite: true
 
@@ -107,7 +108,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mx-scenario-go
-          path: ~/.cargo/bin/mx-scenario-go
+          path: /home/runner/.cargo/bin/mx-scenario-go
           retention-days: 1
           overwrite: true
 
