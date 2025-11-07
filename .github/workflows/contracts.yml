@@ -130,6 +130,9 @@ jobs:
         with:
           name: sc-meta
 
+      - name: Make sc-meta executable
+        run: chmod +x sc-meta
+
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
