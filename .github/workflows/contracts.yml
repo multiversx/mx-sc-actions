@@ -95,6 +95,22 @@ jobs:
           which wasm-opt
           which mx-scenario-go
 
+      - name: Upload sc-meta artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sc-meta
+          path: target/release/sc-meta
+          retention-days: 1
+          overwrite: true
+
+      - name: Upload mx-scenario-go artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mx-scenario-go
+          path: ~/.cargo/bin/mx-scenario-go
+          retention-days: 1
+          overwrite: true
+
   wasm_test:
     name: Wasm tests
     needs: setup
@@ -107,6 +123,11 @@ jobs:
         with:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
+
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sc-meta
 
       - name: Build the wasm contracts
         env:
@@ -197,32 +218,6 @@ jobs:
         with:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
-
-      - name: Cache CI binaries
-        id: cache-binaries
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin
-            /usr/bin/wasm-opt
-          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-binaries-
-
-      - name: Add cached cargo binaries to PATH
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Cache Cargo build
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git/db
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
 
       - name: Build the wasm contracts
         env:
