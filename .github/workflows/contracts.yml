@@ -103,25 +103,20 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sc-meta
-          path: /home/runner/.cargo/bin/sc-meta
           retention-days: 1
           overwrite: true
+          path: /home/runner/.cargo/bin/sc-meta
 
       - name: Upload mx-scenario-go artifact
         uses: actions/upload-artifact@v4
         with:
           name: mx-scenario-go
-          path: /home/runner/.cargo/bin/mx-scenario-go
           retention-days: 1
           overwrite: true
-
-      - name: Upload wasmer library artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: libwasmer
-          path: /home/runner/.cargo/bin/libwasmer_linux_amd64.so
-          retention-days: 1
-          overwrite: true
+          path: |
+            /home/runner/.cargo/bin/mx-scenario-go
+            /home/runner/.cargo/bin/libwasmer_linux_amd64.so
+            /home/runner/.cargo/bin/libvmexeccapi.so
 
   wasm_test:
     name: Wasm tests
@@ -149,12 +144,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: mx-scenario-go
-          path: tools
-
-      - name: Download wasmer library artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: libwasmer
           path: tools
 
       - name: Set tools' path
