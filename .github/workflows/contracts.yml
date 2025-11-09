@@ -136,30 +136,32 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
+      - name: Create local tools directory
+        run: mkdir -p tools
+
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v4
         with:
           name: sc-meta
+          path: tools
 
       - name: Download mx-scenario-go artifact
         uses: actions/download-artifact@v4
         with:
           name: mx-scenario-go
+          path: tools
 
       - name: Download wasmer library artifact
         uses: actions/download-artifact@v4
         with:
           name: libwasmer
+          path: tools
 
-      - name: Make sc-meta and mx-scenario-go executables
+      - name: Set tools' path
         run: |
-          chmod +x sc-meta
-          sudo mv sc-meta /usr/local/bin/
-
-          chmod +x mx-scenario-go
-          sudo mv mx-scenario-go /usr/local/bin/
-
-          sudo mv libwasmer_linux_amd64.so /usr/local/lib/
+          chmod +x tools/sc-meta
+          chmod +x tools/mx-scenario-go
+          echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
         env:
@@ -169,7 +171,9 @@ jobs:
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
-        run: sc-meta test --go
+        run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
+          sc-meta test --go
 
       - name: Generate the contract report
         if: ${{ inputs.enable-contracts-size-report }}
