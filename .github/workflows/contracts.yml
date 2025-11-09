@@ -130,8 +130,12 @@ jobs:
         with:
           name: sc-meta
 
-      - name: Make sc-meta executable
-        run: sudo mv sc-meta /usr/local/bin/
+      - name: Make sc-meta and mx-scenario-go executables
+        run: |
+          chmod +x sc-meta
+          sudo mv sc-meta /usr/local/bin/
+          chmod +x mx-scenario-go
+          sudo mv mx-scenario-go /usr/local/bin/
 
       - name: Build the wasm contracts
         env:
