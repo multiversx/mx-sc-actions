@@ -75,6 +75,8 @@ jobs:
           sudo apt-get update && sudo apt-get install -y binaryen
           cargo install twiggy
 
+          # look at version
+
           if [[ "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
@@ -95,6 +97,7 @@ jobs:
           which wasm-opt
           which sc-meta
           which mx-scenario-go
+          ls -l /home/runner/.cargo/bin
 
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v4
@@ -109,6 +112,14 @@ jobs:
         with:
           name: mx-scenario-go
           path: /home/runner/.cargo/bin/mx-scenario-go
+          retention-days: 1
+          overwrite: true
+
+      - name: Upload wasmer library artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libwasmer
+          path: /home/runner/.cargo/bin/libwasmer_linux_amd64.so
           retention-days: 1
           overwrite: true
 
@@ -135,12 +146,20 @@ jobs:
         with:
           name: mx-scenario-go
 
+      - name: Download wasmer library artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: libwasmer
+
       - name: Make sc-meta and mx-scenario-go executables
         run: |
           chmod +x sc-meta
           sudo mv sc-meta /usr/local/bin/
+
           chmod +x mx-scenario-go
           sudo mv mx-scenario-go /usr/local/bin/
+
+          sudo mv libwasmer_linux_amd64.so /usr/local/lib/
 
       - name: Build the wasm contracts
         env:
