@@ -130,6 +130,11 @@ jobs:
         with:
           name: sc-meta
 
+      - name: Download mx-scenario-go artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mx-scenario-go
+
       - name: Make sc-meta and mx-scenario-go executables
         run: |
           chmod +x sc-meta
