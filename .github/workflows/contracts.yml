@@ -282,37 +282,21 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Cache CI binaries
-        id: cache-binaries
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin
-            /usr/bin/wasm-opt
-          key: ${{ runner.os }}-binaries-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-binaries-
-
-      - name: Add cached cargo binaries to PATH
-        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Cache Cargo build
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index
-            ~/.cargo/registry/cache
-            ~/.cargo/git/db
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
       - name: Install LLVM
         run: |
           rustup component add llvm-tools-preview
           dirname $(find ~/.rustup -name llvm-cov) >> $GITHUB_PATH
           echo $(dirname $(find ~/.rustup -name llvm-cov))
+      
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sc-meta
+
+      - name: Make sc-meta executable
+        run: |
+          chmod +x sc-meta
+          sudo mv sc-meta /usr/local/bin/
 
       - name: Run tests and generate report
         env:
