@@ -143,6 +143,7 @@ jobs:
 
       - name: Set tools' path
         run: |
+          chmod +x -R tools
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
