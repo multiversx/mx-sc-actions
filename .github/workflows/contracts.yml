@@ -143,8 +143,6 @@ jobs:
 
       - name: Set tools' path
         run: |
-          chmod +x tools/sc-meta
-          chmod +x tools/mx-scenario-go
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
