@@ -75,16 +75,14 @@ jobs:
           sudo apt-get update && sudo apt-get install -y binaryen
           cargo install twiggy
 
-          # look at version
-
-          if [[ "${{ inputs.path-to-sc-meta }}" ]];
+          if [[ -n "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
           elif [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
-              cargo install multiversx-sc-meta --locked
+              cargo install multiversx-sc-meta --locked --force
           else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
+              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked --force
           fi
 
           if [[ -z "${{ inputs.mx-scenario-go-version }}" ]];
@@ -97,7 +95,9 @@ jobs:
           which wasm-opt
           which sc-meta
           which mx-scenario-go
-          ls -l /home/runner/.cargo/bin
+
+          sc-meta --version
+          mx-scenario-go --version
 
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v4
@@ -243,6 +243,16 @@ jobs:
         with:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
+
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sc-meta
+
+      - name: Make sc-meta executable
+        run: |
+          chmod +x sc-meta
+          sudo mv sc-meta /usr/local/bin/
 
       - name: Build the wasm contracts
         env:
