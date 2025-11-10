@@ -13,11 +13,6 @@ on:
         default: "wasm32-unknown-unknown"
         required: false
         type: string
-      sc-meta-hash-git:
-        description: "multiversx-sc-meta git commit hash"
-        default: ""
-        required: false
-        type: string
       sc-meta-version:
         description: "multiversx-sc-meta version"
         default: ""
