@@ -162,7 +162,9 @@ jobs:
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
-        run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
+        run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
+          sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
         env:
