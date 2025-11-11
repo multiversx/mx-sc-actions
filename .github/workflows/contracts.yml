@@ -149,8 +149,6 @@ jobs:
           tar -xvf tools/sc_meta.tar -C tools
 
           mv tools/home/runner/.cargo/bin/sc-meta tools/
-          rm -rf tools/home
-
           mv tools/usr/bin/wasm-opt tools/
           mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
           rm -rf tools/usr
@@ -162,18 +160,19 @@ jobs:
           rm -rf tools/home
 
           echo "$(pwd)/tools" >> $GITHUB_PATH
-          export LD_LIBRARY_PATH=$(pwd)/tools
 
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
         run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
           sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
         run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
           sc-meta test --go
 
       - name: Generate the contract report
