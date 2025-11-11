@@ -95,9 +95,9 @@ jobs:
           mx-scenario-go --version
 
       - name: "Tar sc-meta"
-        run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt
+        run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt /usr/lib/x86_64-linux-gnu/libbinaryen.so
 
-      - name: "Tar sc-meta"
+      - name: "Tar mx-scenario-go"
         run: tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go /home/runner/.cargo/bin/libwasmer_linux_amd64.so /home/runner/.cargo/bin/libvmexeccapi.so
 
       - name: Upload sc-meta artifact
@@ -152,6 +152,7 @@ jobs:
           rm -rf tools/home
 
           mv tools/usr/bin/wasm-opt tools/
+          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
           rm -rf tools/usr
 
           tar -xvf tools/mx_scenario_go.tar -C tools
@@ -267,6 +268,7 @@ jobs:
           rm -rf tools/home
 
           mv tools/usr/bin/wasm-opt tools/
+          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
           rm -rf tools/usr
 
           echo "$(pwd)/tools" >> $GITHUB_PATH
@@ -328,6 +330,7 @@ jobs:
           rm -rf tools/home
 
           mv tools/usr/bin/wasm-opt tools/
+          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
           rm -rf tools/usr
 
           echo "$(pwd)/tools" >> $GITHUB_PATH
