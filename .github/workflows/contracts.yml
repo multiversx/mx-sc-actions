@@ -94,15 +94,22 @@ jobs:
           sc-meta --version
           mx-scenario-go --version
 
+      - name: "Tar sc-meta"
+        run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt
+
+      - name: "Tar sc-meta"
+        run:
+          tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go \
+          /home/runner/.cargo/bin/libwasmer_linux_amd64.so \
+          /home/runner/.cargo/bin/libvmexeccapi.so
+
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v4
         with:
           name: sc-meta
           retention-days: 1
           overwrite: true
-          path: |
-            /home/runner/.cargo/bin/sc-meta
-            /usr/bin/wasm-opt
+          path: sc_meta.tar
 
       - name: Upload mx-scenario-go artifact
         uses: actions/upload-artifact@v4
@@ -110,10 +117,7 @@ jobs:
           name: mx-scenario-go
           retention-days: 1
           overwrite: true
-          path: |
-            /home/runner/.cargo/bin/mx-scenario-go
-            /home/runner/.cargo/bin/libwasmer_linux_amd64.so
-            /home/runner/.cargo/bin/libvmexeccapi.so
+          path: mx_scenario_go.tar
 
   wasm_test:
     name: Wasm tests
@@ -145,7 +149,16 @@ jobs:
 
       - name: Set tools' path
         run: |
-          chmod +x -R tools
+          tar -xvf tools/sc_meta.tar -C tools
+
+          mv tools/home/runner/.cargo/bin/sc-meta tools/
+          rm -rf tools/home
+
+          mv tools/usr/bin/wasm-opt tools/
+          rm -rf tools/usr
+
+          tar -xvf tools/mx_scenario_go.tar -C tools
+
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
@@ -247,10 +260,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: sc-meta
+          path: tools
 
       - name: Make sc-meta executable
         run: |
-          chmod +x -R tools
+          tar -xvf tools/sc_meta.tar -C tools
+
+          mv tools/home/runner/.cargo/bin/sc-meta tools/
+          rm -rf tools/home
+
+          mv tools/usr/bin/wasm-opt tools/
+          rm -rf tools/usr
+
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
@@ -304,7 +325,14 @@ jobs:
 
       - name: Make sc-meta executable
         run: |
-          chmod +x -R tools
+          tar -xvf tools/sc_meta.tar -C tools
+
+          mv tools/home/runner/.cargo/bin/sc-meta tools/
+          rm -rf tools/home
+
+          mv tools/usr/bin/wasm-opt tools/
+          rm -rf tools/usr
+
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Run tests and generate report
