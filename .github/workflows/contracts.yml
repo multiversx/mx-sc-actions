@@ -98,10 +98,7 @@ jobs:
         run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt
 
       - name: "Tar sc-meta"
-        run:
-          tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go \
-          /home/runner/.cargo/bin/libwasmer_linux_amd64.so \
-          /home/runner/.cargo/bin/libvmexeccapi.so
+        run: tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go /home/runner/.cargo/bin/libwasmer_linux_amd64.so /home/runner/.cargo/bin/libvmexeccapi.so
 
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v4
