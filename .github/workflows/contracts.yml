@@ -58,7 +58,7 @@ jobs:
     name: Setup Environment
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -101,7 +101,7 @@ jobs:
         run: tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go /home/runner/.cargo/bin/libwasmer_linux_amd64.so /home/runner/.cargo/bin/libvmexeccapi.so
 
       - name: Upload sc-meta artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sc-meta
           retention-days: 1
@@ -109,7 +109,7 @@ jobs:
           path: sc_meta.tar
 
       - name: Upload mx-scenario-go artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: mx-scenario-go
           retention-days: 1
@@ -121,7 +121,7 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -133,13 +133,13 @@ jobs:
         run: mkdir -p tools
 
       - name: Download sc-meta artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: sc-meta
           path: tools
 
       - name: Download mx-scenario-go artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: mx-scenario-go
           path: tools
@@ -183,13 +183,13 @@ jobs:
 
       - name: Upload the report json
         if: ${{ inputs.enable-contracts-size-report }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: report
           path: report.json
 
       - name: Download the base report
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v11
         if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
         continue-on-error: true
         with:
@@ -216,7 +216,7 @@ jobs:
             head: ${{ github.event.pull_request.head.sha }}
 
       - name: Upload the report markdown
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
         with:
           name: report-markdown
@@ -224,7 +224,7 @@ jobs:
 
       - name: Find the comment containing the report
         id: fc
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v4
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -232,7 +232,7 @@ jobs:
           body-includes: "Contract comparison"
 
       - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v2
+        uses: peter-evans/create-or-update-comment@v5
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -246,7 +246,7 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.enable-interactor-tests
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -258,7 +258,7 @@ jobs:
         run: mkdir -p tools
 
       - name: Download sc-meta artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: sc-meta
           path: tools
@@ -304,7 +304,7 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -355,7 +355,7 @@ jobs:
 
       - name: Find the comment containing the report
         id: fc
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v4
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -363,7 +363,7 @@ jobs:
           body-includes: "Coverage Summary"
 
       - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v2
+        uses: peter-evans/create-or-update-comment@v5
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -375,7 +375,7 @@ jobs:
     name: Rust tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
@@ -389,7 +389,7 @@ jobs:
     name: Clippy linter check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
