@@ -100,7 +100,9 @@ jobs:
           name: sc-meta
           retention-days: 1
           overwrite: true
-          path: /home/runner/.cargo/bin/sc-meta
+          path: |
+            /home/runner/.cargo/bin/sc-meta
+            /usr/bin/wasm-opt
 
       - name: Upload mx-scenario-go artifact
         uses: actions/upload-artifact@v4
@@ -238,6 +240,9 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
+      - name: Create local tools directory
+        run: mkdir -p tools
+
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v4
         with:
@@ -245,8 +250,8 @@ jobs:
 
       - name: Make sc-meta executable
         run: |
-          chmod +x sc-meta
-          sudo mv sc-meta /usr/local/bin/
+          chmod +x -R tools
+          echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
         env:
@@ -287,16 +292,20 @@ jobs:
           rustup component add llvm-tools-preview
           dirname $(find ~/.rustup -name llvm-cov) >> $GITHUB_PATH
           echo $(dirname $(find ~/.rustup -name llvm-cov))
-      
+
+      - name: Create local tools directory
+        run: mkdir -p tools
+
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v4
         with:
           name: sc-meta
+          path: tools
 
       - name: Make sc-meta executable
         run: |
-          chmod +x sc-meta
-          sudo mv sc-meta /usr/local/bin/
+          chmod +x -R tools
+          echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Run tests and generate report
         env:
