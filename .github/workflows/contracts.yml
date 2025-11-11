@@ -156,21 +156,24 @@ jobs:
           rm -rf tools/usr
 
           tar -xvf tools/mx_scenario_go.tar -C tools
+          mv tools/home/runner/.cargo/bin/mx-scenario-go tools/
+          mv tools/home/runner/.cargo/bin/libwasmer_linux_amd64.so tools/
+          mv tools/home/runner/.cargo/bin/libvmexeccapi.so tools/
+          rm -rf tools/home
 
           echo "$(pwd)/tools" >> $GITHUB_PATH
+          export LD_LIBRARY_PATH=$(pwd)/tools
 
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
         run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
           sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
         run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
           sc-meta test --go
 
       - name: Generate the contract report
