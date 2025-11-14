@@ -4,81 +4,80 @@ on:
   workflow_call:
     inputs:
       rust-toolchain:
-        description: 'Rust toolchain to use'
-        default: 'nightly'
+        description: "Rust toolchain to use"
+        default: "stable"
         required: false
         type: string
-      sc-meta-hash-git:
-        description: 'multiversx-sc-meta git commit hash'
-        default: ''
+      rust-target:
+        description: "Rust target to use"
+        default: "wasm32-unknown-unknown"
         required: false
         type: string
       sc-meta-version:
-        description: 'multiversx-sc-meta version'
-        default: ''
+        description: "multiversx-sc-meta version"
+        default: ""
         required: false
         type: string
       mx-scenario-go-version:
-        description: 'sc-scenario-go version'
-        default: ''
+        description: "sc-scenario-go version"
+        default: ""
         required: false
         type: string
       path-to-sc-meta:
-        description: 'multiversx-sc-meta from local'
-        default: ''
+        description: "multiversx-sc-meta from local"
+        default: ""
         required: false
         type: string
       clippy-args:
-        description: 'cargo clippy arguments'
-        default: '--all-targets --all-features'
+        description: "cargo clippy arguments"
+        default: "--all-targets --all-features"
         required: false
         type: string
       enable-contracts-size-report:
-        description: 'Enable contracts size report'
+        description: "Enable contracts size report"
         default: true
         required: false
         type: boolean
       enable-interactor-tests:
-        description: 'Enable interactor tests'
+        description: "Enable interactor tests"
         default: false
         required: false
         type: boolean
       coverage-args:
-        description: 'sc-meta test-coverage arguments'
-        default: '--output ./coverage.md'
+        description: "sc-meta test-coverage arguments"
+        default: "--output ./coverage.md"
         required: false
         type: string
     secrets:
       token:
-        description: 'Github token'
+        description: "Github token"
         required: true
 
 jobs:
-  wasm_test:
-    name: Wasm tests
+  setup:
+    name: Setup Environment
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v5
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: wasm32-unknown-unknown
+          target: ${{ inputs.rust-target }}
 
       - name: Install prerequisites
         run: |
-          cargo install wasm-opt
+          sudo apt-get update && sudo apt-get install -y binaryen
           cargo install twiggy
 
-          if [[ "${{ inputs.path-to-sc-meta }}" ]];
+          if [[ -n "${{ inputs.path-to-sc-meta }}" ]];
           then
               cargo install --path ${{ inputs.path-to-sc-meta }}
           elif [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
-              cargo install multiversx-sc-meta --locked
+              cargo install multiversx-sc-meta --locked --force
           else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
+              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked --force
           fi
 
           if [[ -z "${{ inputs.mx-scenario-go-version }}" ]];
@@ -89,34 +88,108 @@ jobs:
           fi
 
           which wasm-opt
+          which sc-meta
           which mx-scenario-go
+
+          sc-meta --version
+          mx-scenario-go --version
+
+      - name: "Tar sc-meta"
+        run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt /usr/lib/x86_64-linux-gnu/libbinaryen.so
+
+      - name: "Tar mx-scenario-go"
+        run: tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go /home/runner/.cargo/bin/libwasmer_linux_amd64.so /home/runner/.cargo/bin/libvmexeccapi.so
+
+      - name: Upload sc-meta artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: sc-meta
+          retention-days: 1
+          overwrite: true
+          path: sc_meta.tar
+
+      - name: Upload mx-scenario-go artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: mx-scenario-go
+          retention-days: 1
+          overwrite: true
+          path: mx_scenario_go.tar
+
+  wasm_test:
+    name: Wasm tests
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          target: ${{ inputs.rust-target }}
+
+      - name: Create local tools directory
+        run: mkdir -p tools
+
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: sc-meta
+          path: tools
+
+      - name: Download mx-scenario-go artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: mx-scenario-go
+          path: tools
+
+      - name: Set tools' path
+        run: |
+          tar -xvf tools/sc_meta.tar -C tools
+
+          mv tools/home/runner/.cargo/bin/sc-meta tools/
+          mv tools/usr/bin/wasm-opt tools/
+          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
+          rm -rf tools/usr
+
+          tar -xvf tools/mx_scenario_go.tar -C tools
+          mv tools/home/runner/.cargo/bin/mx-scenario-go tools/
+          mv tools/home/runner/.cargo/bin/libwasmer_linux_amd64.so tools/
+          mv tools/home/runner/.cargo/bin/libvmexeccapi.so tools/
+          rm -rf tools/home
+
+          echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
-        run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
+        run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
+          sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Run the wasm tests
         env:
           RUSTFLAGS: ""
-        run: cargo test --features multiversx-sc-scenario/run-go-tests
+        run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
+          sc-meta test --go
 
       - name: Generate the contract report
         if: ${{ inputs.enable-contracts-size-report }}
         env:
           RUSTFLAGS: ""
-        run: |
-          sc-meta report compile --path . --output report.json
+        run: sc-meta report compile --path . --output report.json
 
       - name: Upload the report json
         if: ${{ inputs.enable-contracts-size-report }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: report
           path: report.json
 
       - name: Download the base report
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v11
         if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
         continue-on-error: true
         with:
@@ -143,7 +216,7 @@ jobs:
             head: ${{ github.event.pull_request.head.sha }}
 
       - name: Upload the report markdown
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
         with:
           name: report-markdown
@@ -151,15 +224,15 @@ jobs:
 
       - name: Find the comment containing the report
         id: fc
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v4
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: 'Contract comparison'
+          comment-author: "github-actions[bot]"
+          body-includes: "Contract comparison"
 
       - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v2
+        uses: peter-evans/create-or-update-comment@v5
         if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -169,44 +242,46 @@ jobs:
 
   interactor_tests:
     name: Interactor tests
+    needs: setup
     runs-on: ubuntu-latest
     if: inputs.enable-interactor-tests
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: wasm32-unknown-unknown
+          target: ${{ inputs.rust-target }}
 
-      - name: Install prerequisites
+      - name: Create local tools directory
+        run: mkdir -p tools
+
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: sc-meta
+          path: tools
+
+      - name: Make sc-meta executable
         run: |
-          cargo install wasm-opt
-          cargo install twiggy
+          tar -xvf tools/sc_meta.tar -C tools
 
-          if [[ -n "${{ inputs.sc-meta-hash-git }}" ]];
-          then
-              git clone https://github.com/multiversx/mx-sdk-rs.git sdk
-              cd sdk/ && git checkout ${{ inputs.sc-meta-hash-git }}
-              cargo install --path $(pwd)/framework/meta
-              cd .. && rm -rf sdk
-          elif [[ "${{ inputs.path-to-sc-meta }}" ]];
-          then
-              cargo install --path ${{ inputs.path-to-sc-meta }}
-          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
-          then
-              cargo install multiversx-sc-meta --locked
-          else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
-          fi
+          mv tools/home/runner/.cargo/bin/sc-meta tools/
+          rm -rf tools/home
 
-          which wasm-opt
+          mv tools/usr/bin/wasm-opt tools/
+          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
+          rm -rf tools/usr
+
+          echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
-        run: sc-meta all build --no-imports --target-dir $(pwd)/target --path .
+        run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
+          sc-meta all build --no-imports --target-dir $(pwd)/target --path .
 
       - name: Pull latest chain simulator docker image
         env:
@@ -214,7 +289,7 @@ jobs:
         run: sc-meta cs install
 
       - name: Run the interactor tests
-        continue-on-error: false  
+        continue-on-error: false
         env:
           RUSTFLAGS: ""
         run: sc-meta cs start & cargo test --features chain-simulator-tests
@@ -226,37 +301,50 @@ jobs:
 
   test_coverage:
     name: Test Coverage
+    needs: setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: wasm32-unknown-unknown
+          target: ${{ inputs.rust-target }}
 
-      - name: Install prerequisites
+      - name: Install LLVM
         run: |
           rustup component add llvm-tools-preview
           dirname $(find ~/.rustup -name llvm-cov) >> $GITHUB_PATH
-
           echo $(dirname $(find ~/.rustup -name llvm-cov))
 
-          if [[ "${{ inputs.path-to-sc-meta }}" ]];
-          then
-              cargo install --path ${{ inputs.path-to-sc-meta }}
-          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
-          then
-              cargo install multiversx-sc-meta --locked
-          else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked
-          fi
+      - name: Create local tools directory
+        run: mkdir -p tools
+
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sc-meta
+          path: tools
+
+      - name: Make sc-meta executable
+        run: |
+          tar -xvf tools/sc_meta.tar -C tools
+
+          mv tools/home/runner/.cargo/bin/sc-meta tools/
+          rm -rf tools/home
+
+          mv tools/usr/bin/wasm-opt tools/
+          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
+          rm -rf tools/usr
+
+          echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Run tests and generate report
         env:
           RUSTFLAGS: ""
         run: |
+          export LD_LIBRARY_PATH=$(pwd)/tools
           sc-meta test-coverage ${{ inputs.coverage-args }}
 
       - name: Upload the report
@@ -267,7 +355,7 @@ jobs:
 
       - name: Find the comment containing the report
         id: fc
-        uses: peter-evans/find-comment@v2
+        uses: peter-evans/find-comment@v4
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -275,7 +363,7 @@ jobs:
           body-includes: "Coverage Summary"
 
       - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v2
+        uses: peter-evans/create-or-update-comment@v5
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -287,7 +375,7 @@ jobs:
     name: Rust tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
@@ -301,7 +389,7 @@ jobs:
     name: Clippy linter check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
