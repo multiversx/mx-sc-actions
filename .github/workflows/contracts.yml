@@ -93,6 +93,7 @@ jobs:
 
           sc-meta --version
           mx-scenario-go --version
+          wasm-opt --version
 
       - name: "Tar sc-meta"
         run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt /usr/lib/x86_64-linux-gnu/libbinaryen.so
