@@ -112,10 +112,10 @@ jobs:
           mx-scenario-go --version
 
       - name: "Tar sc-meta"
-        run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt /usr/lib/x86_64-linux-gnu/libbinaryen.so
+        run: tar -cvf sc_meta.tar $(which sc-meta) $(which wasm-opt) /usr/lib/x86_64-linux-gnu/libbinaryen.so
 
       - name: "Tar mx-scenario-go"
-        run: tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go /home/runner/.cargo/bin/libwasmer_linux_amd64.so /home/runner/.cargo/bin/libvmexeccapi.so
+        run: tar -cvf mx_scenario_go.tar $(which mx-scenario-go) /home/runner/.cargo/bin/libwasmer_linux_amd64.so /home/runner/.cargo/bin/libvmexeccapi.so
 
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v5
