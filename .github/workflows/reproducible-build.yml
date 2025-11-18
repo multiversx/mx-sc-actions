@@ -3,6 +3,11 @@ name: Build contracts deterministically
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: "The type of machine to run the job on"
+        default: "ubuntu-latest"
+        required: false
+        type: string
       image_tag:
         type: string
         required: true
@@ -31,7 +36,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - name: Handle input
         run: |

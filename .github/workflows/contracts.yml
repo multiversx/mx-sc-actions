@@ -8,6 +8,11 @@ on:
         default: "stable"
         required: false
         type: string
+      runs-on:
+        description: "The type of machine to run the job on"
+        default: "ubuntu-latest"
+        required: false
+        type: string
       rust-target:
         description: "Rust target to use"
         default: "wasm32-unknown-unknown"
@@ -56,7 +61,7 @@ on:
 jobs:
   setup:
     name: Setup Environment
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
       - name: Install rust
@@ -119,7 +124,7 @@ jobs:
   wasm_test:
     name: Wasm tests
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
 
@@ -243,7 +248,7 @@ jobs:
   interactor_tests:
     name: Interactor tests
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     if: inputs.enable-interactor-tests
     steps:
       - uses: actions/checkout@v5
@@ -302,7 +307,7 @@ jobs:
   test_coverage:
     name: Test Coverage
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
 
@@ -373,7 +378,7 @@ jobs:
 
   rust_test:
     name: Rust tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -387,7 +392,7 @@ jobs:
 
   clippy_check:
     name: Clippy linter check
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
