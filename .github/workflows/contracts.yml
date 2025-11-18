@@ -125,11 +125,11 @@ jobs:
           LIB_WASMER=$(find $HOME -name "libwasmer_linux_amd64.so" -print -quit)
           LIB_C_API=$(find $HOME -name "libvmexeccapi.so" -print -quit)
 
-          echo "Found Binary: $BIN_PATH"
+          echo "Found Binary: $SCENARIO_PATH"
           echo "Found Wasmer: $LIB_WASMER"
           echo "Found VM lib: $LIB_C_API"
 
-          tar -cvf mx_scenario_go.tar "$BIN_PATH" "$LIB_WASMER" "$LIB_C_API"
+          tar -cvf mx_scenario_go.tar "$SCENARIO_PATH" "$LIB_WASMER" "$LIB_C_API"
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v5
         with:
