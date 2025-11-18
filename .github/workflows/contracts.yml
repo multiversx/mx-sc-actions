@@ -43,6 +43,21 @@ on:
         default: false
         required: false
         type: boolean
+      enable-rust-tests:
+        description: 'Enable rust tests'
+        default: true
+        required: false
+        type: boolean
+      enable-test-coverage:
+        description: 'Enable test coverage'
+        default: true
+        required: false
+        type: boolean
+      enable-wasm-tests:
+        description: 'Enable wasm tests'
+        default: true
+        required: false
+        type: boolean
       coverage-args:
         description: "sc-meta test-coverage arguments"
         default: "--output ./coverage.md"
@@ -57,6 +72,7 @@ jobs:
   setup:
     name: Setup Environment
     runs-on: ubuntu-latest
+    if: inputs.enable-wasm-tests
     steps:
       - uses: actions/checkout@v5
       - name: Install rust
@@ -303,6 +319,7 @@ jobs:
     name: Test Coverage
     needs: setup
     runs-on: ubuntu-latest
+    if: inputs.enable-test-coverage
     steps:
       - uses: actions/checkout@v5
 
@@ -374,6 +391,7 @@ jobs:
   rust_test:
     name: Rust tests
     runs-on: ubuntu-latest
+    if: inputs.enable-rust-tests
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
