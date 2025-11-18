@@ -89,7 +89,7 @@ jobs:
 
           if [[ -n "${{ inputs.path-to-sc-meta }}" ]];
           then
-              cargo install --path ${{ inputs.path-to-sc-meta }}
+              cargo install --path ${{ inputs.path-to-sc-meta }} --force
           elif [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
               cargo install multiversx-sc-meta --locked --force
