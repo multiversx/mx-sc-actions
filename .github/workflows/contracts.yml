@@ -9,8 +9,24 @@ on:
         required: false
         type: string
       runs-on:
-        description: "The type of machine to run the job on"
+        description: "The type of machine to run all the jobs on"
         default: "ubuntu-latest"
+        required: false
+        type: string
+      setup-runs-on:
+        description: "The type of machine to run the setup job on"
+        required: false
+        type: string
+      wasm-test-runs-on:
+        description: "The type of machine to run the wasm_test job on"
+        required: false
+        type: string
+      interactor-tests-runs-on:
+        description: "The type of machine to run the interactor_tests job on"
+        required: false
+        type: string
+      test-coverage-runs-on:
+        description: "The type of machine to run the test_coverage job on"
         required: false
         type: string
       rust-target:
@@ -61,17 +77,16 @@ on:
 jobs:
   setup:
     name: Setup Environment
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: ${{ inputs.setup-runs-on || inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
 
       - name: Install System Dependencies on Self Hosted
-        if: ${{ inputs.runs-on == 'self-hosted' }}
         run: |
           sudo apt-get update
 
           C_PKGS=""
-          if [ "${{ inputs.runs-on }}" == "self-hosted" ]; then
+          if [ "${{ inputs.setup-runs-on || inputs.runs-on }}" == "self-hosted" ]; then
             C_PKGS="pkg-config libssl-dev"
           fi
 
@@ -149,7 +164,7 @@ jobs:
   wasm_test:
     name: Wasm tests
     needs: setup
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: ${{ inputs.wasm-test-runs-on || inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
 
@@ -267,7 +282,7 @@ jobs:
   interactor_tests:
     name: Interactor tests
     needs: setup
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: ${{ inputs.interactor-tests-runs-on || inputs.runs-on }}
     if: inputs.enable-interactor-tests
     steps:
       - uses: actions/checkout@v5
@@ -322,7 +337,7 @@ jobs:
   test_coverage:
     name: Test Coverage
     needs: setup
-    runs-on: ${{ inputs.runs-on }}
+    runs-on: ${{ inputs.test-coverage-runs-on || inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
 
