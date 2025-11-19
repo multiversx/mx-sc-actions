@@ -18,15 +18,15 @@ on:
         required: false
         type: string
       wasm-test-runs-on:
-        description: "The type of machine to run the wasm_test job on"
+        description: "The type of machine to run the Wasm Tests job on"
         required: false
         type: string
       interactor-tests-runs-on:
-        description: "The type of machine to run the interactor_tests job on"
+        description: "The type of machine to run the Interactor Tests job on"
         required: false
         type: string
       test-coverage-runs-on:
-        description: "The type of machine to run the test_coverage job on"
+        description: "The type of machine to run the Test Coverage job on"
         required: false
         type: string
       rust-target:
@@ -81,7 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install System Dependencies on Self Hosted
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
 
@@ -98,7 +98,7 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Install prerequisites ubuntu
+      - name: Install prerequisites
         run: |
           cargo install twiggy
 
@@ -145,6 +145,7 @@ jobs:
           echo "Found VM lib: $LIB_C_API"
 
           tar -cvf mx_scenario_go.tar "$SCENARIO_PATH" "$LIB_WASMER" "$LIB_C_API"
+
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v5
         with:
