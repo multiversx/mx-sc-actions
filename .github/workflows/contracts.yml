@@ -85,12 +85,10 @@ jobs:
         run: |
           sudo apt-get update
 
-          C_PKGS=""
-          if [ "${{ inputs.setup-runs-on || inputs.runs-on }}" == "self-hosted" ]; then
-            C_PKGS="pkg-config libssl-dev"
+          sudo apt-get install -y binaryen
+          if [[ "${{ inputs.setup-runs-on || inputs.runs-on }}" == *"self-hosted"* ]]; then
+            sudo apt-get install -y pkg-config libssl-dev
           fi
-
-          sudo apt-get install -y $C_PKGS binaryen
 
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -194,9 +192,14 @@ jobs:
         run: |
           tar -xvf tools/sc_meta.tar -C tools
           tar -xvf tools/mx_scenario_go.tar -C tools
-          find tools -name "sc-meta" -type f -exec mv {} tools/ \;
-          find tools -name "mx-scenario-go" -type f -exec mv {} tools/ \;
-          find tools -name "wasm-opt" -type f -exec mv {} tools/ \;
+
+          for tool in sc-meta mx-scenario-go wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
+
           find tools -name "*.so" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
@@ -306,8 +309,14 @@ jobs:
       - name: Make sc-meta executable
         run: |
           tar -xvf tools/sc_meta.tar -C tools
-          find tools -name "sc-meta" -type f -exec mv {} tools/ \;
-          find tools -name "wasm-opt" -type f -exec mv {} tools/ \;
+
+          for tool in sc-meta wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
+
           find tools -name "*.so" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
@@ -366,8 +375,13 @@ jobs:
       - name: Make sc-meta executable
         run: |
           tar -xvf tools/sc_meta.tar -C tools
-          find tools -name "sc-meta" -type f -exec mv {} tools/ \;
-          find tools -name "wasm-opt" -type f -exec mv {} tools/ \;
+
+          for tool in sc-meta wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
           find tools -name "*.so" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
