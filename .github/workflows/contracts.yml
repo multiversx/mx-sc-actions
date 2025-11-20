@@ -124,7 +124,7 @@ jobs:
           tar -cvf sc_meta.tar \
             "$(which sc-meta)" \
             "$(which wasm-opt)" \
-            "$(ldconfig -p | awk '/libbinaryen\.so$/ {print $NF}')"
+            "$(find /usr -name "libbinaryen.so" -print -quit 2>/dev/null)"
 
       - name: "Tar mx-scenario-go"
         run: |
