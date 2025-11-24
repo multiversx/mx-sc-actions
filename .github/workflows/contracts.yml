@@ -8,6 +8,27 @@ on:
         default: "stable"
         required: false
         type: string
+      runs-on:
+        description: "The type of machine to run all the jobs on"
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      setup-runs-on:
+        description: "The type of machine to run the setup job on"
+        required: false
+        type: string
+      wasm-test-runs-on:
+        description: "The type of machine to run the Wasm Tests job on"
+        required: false
+        type: string
+      interactor-tests-runs-on:
+        description: "The type of machine to run the Interactor Tests job on"
+        required: false
+        type: string
+      test-coverage-runs-on:
+        description: "The type of machine to run the Test Coverage job on"
+        required: false
+        type: string
       rust-target:
         description: "Rust target to use"
         default: "wasm32-unknown-unknown"
@@ -56,24 +77,28 @@ on:
 jobs:
   setup:
     name: Setup Environment
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.setup-runs-on || inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
+
       - name: Install rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Install prerequisites
+      - name: Install System Dependencies
+        if: ${{ !contains(inputs.setup-runs-on, 'self-hosted') }}
         run: |
           cat /etc/os-release; cat /etc/issue
           sudo apt-get update && sudo apt-get install -y binaryen
           cargo install twiggy
 
+      - name: Install prerequisites
+        run: |
           if [[ -n "${{ inputs.path-to-sc-meta }}" ]];
           then
-              cargo install --path ${{ inputs.path-to-sc-meta }}
+              cargo install --path ${{ inputs.path-to-sc-meta }} --force
           elif [[ -z "${{ inputs.sc-meta-version }}" ]];
           then
               cargo install multiversx-sc-meta --locked --force
@@ -97,10 +122,24 @@ jobs:
           wasm-opt --version
 
       - name: "Tar sc-meta"
-        run: tar -cvf sc_meta.tar /home/runner/.cargo/bin/sc-meta /usr/bin/wasm-opt /usr/lib/x86_64-linux-gnu/libbinaryen.so
+        run: |
+          tar -cvf sc_meta.tar \
+            "$(which sc-meta)" \
+            "$(which wasm-opt)" \
+            "$(find /usr -name "libbinaryen.so" -print -quit 2>/dev/null)"
 
       - name: "Tar mx-scenario-go"
-        run: tar -cvf mx_scenario_go.tar /home/runner/.cargo/bin/mx-scenario-go /home/runner/.cargo/bin/libwasmer_linux_amd64.so /home/runner/.cargo/bin/libvmexeccapi.so
+        run: |
+          SCENARIO_PATH=$(which mx-scenario-go)
+
+          LIB_WASMER=$(find $HOME -name "libwasmer_linux_amd64.so" -print -quit)
+          LIB_C_API=$(find $HOME -name "libvmexeccapi.so" -print -quit)
+
+          echo "Found Binary: $SCENARIO_PATH"
+          echo "Found Wasmer: $LIB_WASMER"
+          echo "Found VM lib: $LIB_C_API"
+
+          tar -cvf mx_scenario_go.tar "$SCENARIO_PATH" "$LIB_WASMER" "$LIB_C_API"
 
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v5
@@ -121,7 +160,7 @@ jobs:
   wasm_test:
     name: Wasm tests
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.wasm-test-runs-on || inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
 
@@ -149,18 +188,17 @@ jobs:
       - name: Set tools' path
         run: |
           tar -xvf tools/sc_meta.tar -C tools
-
-          mv tools/home/runner/.cargo/bin/sc-meta tools/
-          mv tools/usr/bin/wasm-opt tools/
-          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
-          rm -rf tools/usr
-
           tar -xvf tools/mx_scenario_go.tar -C tools
-          mv tools/home/runner/.cargo/bin/mx-scenario-go tools/
-          mv tools/home/runner/.cargo/bin/libwasmer_linux_amd64.so tools/
-          mv tools/home/runner/.cargo/bin/libvmexeccapi.so tools/
-          rm -rf tools/home
 
+          for tool in sc-meta mx-scenario-go wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
+
+          find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
@@ -245,7 +283,7 @@ jobs:
   interactor_tests:
     name: Interactor tests
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.interactor-tests-runs-on || inputs.runs-on }}
     if: inputs.enable-interactor-tests
     steps:
       - uses: actions/checkout@v5
@@ -269,13 +307,15 @@ jobs:
         run: |
           tar -xvf tools/sc_meta.tar -C tools
 
-          mv tools/home/runner/.cargo/bin/sc-meta tools/
-          rm -rf tools/home
+          for tool in sc-meta wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
 
-          mv tools/usr/bin/wasm-opt tools/
-          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
-          rm -rf tools/usr
-
+          find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Build the wasm contracts
@@ -304,7 +344,7 @@ jobs:
   test_coverage:
     name: Test Coverage
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.test-coverage-runs-on || inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
 
@@ -333,13 +373,14 @@ jobs:
         run: |
           tar -xvf tools/sc_meta.tar -C tools
 
-          mv tools/home/runner/.cargo/bin/sc-meta tools/
-          rm -rf tools/home
-
-          mv tools/usr/bin/wasm-opt tools/
-          mv tools/usr/lib/x86_64-linux-gnu/libbinaryen.so tools/
-          rm -rf tools/usr
-
+          for tool in sc-meta wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
+          find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
       - name: Run tests and generate report
@@ -375,7 +416,7 @@ jobs:
 
   rust_test:
     name: Rust tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -389,7 +430,7 @@ jobs:
 
   clippy_check:
     name: Clippy linter check
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1
