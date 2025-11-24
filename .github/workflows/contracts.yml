@@ -93,7 +93,7 @@ jobs:
           target: ${{ inputs.rust-target }}
 
       - name: Install System Dependencies
-        if: ${{ !contains(inputs.setup-runs-on, 'self-hosted') }}
+        if: ${{ inputs.wasm-opt-version == '' && !contains(inputs.setup-runs-on, 'self-hosted') }}
         run: |
           wget https://github.com/WebAssembly/binaryen/releases/download/version_${{ inputs.wasm-opt-version }}/binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
           tar -xvf binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
@@ -133,7 +133,7 @@ jobs:
           tar -cvf sc_meta.tar \
             "$(which sc-meta)" \
             "$(which wasm-opt)" \
-            "$(find $(pwd)/binaryen-version_${{ inputs.wasm-opt-version }} -name "libbinaryen.so")"
+            "$(find "$(pwd)/binaryen-version_${{ inputs.wasm-opt-version }}" -name "libbinaryen.a")"
 
       - name: "Tar mx-scenario-go"
         run: |
@@ -205,6 +205,7 @@ jobs:
           done
 
           find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
@@ -322,6 +323,7 @@ jobs:
           done
 
           find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
@@ -387,6 +389,7 @@ jobs:
             fi
           done
           find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
