@@ -95,10 +95,16 @@ jobs:
       - name: Install System Dependencies
         if: ${{ !contains(inputs.setup-runs-on, 'self-hosted') || inputs.wasm-opt-version != '' }}
         run: |
-          WASM_OPT_VERSION=${{ inputs.wasm-opt-version || '110' }}
+          WASM_OPT_VERSION=${{ inputs.wasm-opt-version || '108' }}
           wget https://github.com/WebAssembly/binaryen/releases/download/version_${WASM_OPT_VERSION}/binaryen-version_${WASM_OPT_VERSION}-x86_64-linux.tar.gz
           tar -xvf binaryen-version_${WASM_OPT_VERSION}-x86_64-linux.tar.gz
+
+          # Add binaryen to PATH
           echo "$(pwd)/binaryen-version_${WASM_OPT_VERSION}/bin" >> $GITHUB_PATH
+
+          # Save the root path to GITHUB_ENV for saving to artifacts later
+          echo "BINARYEN_ROOT=$(pwd)/binaryen-version_${WASM_OPT_VERSION}" >> $GITHUB_ENV
+
           cargo install twiggy
 
       - name: Install prerequisites
@@ -130,11 +136,11 @@ jobs:
 
       - name: "Tar sc-meta"
         run: |
-          WASM_OPT_VERSION=${{ inputs.wasm-opt-version || '110' }}
           tar -cvf sc_meta.tar \
             "$(which sc-meta)" \
             "$(which wasm-opt)" \
-            "$(find "$(pwd)/binaryen-version_${WASM_OPT_VERSION}" -name "libbinaryen.a")"
+            "$(find "$BINARYEN_ROOT" -name "libbinaryen.a")"
+
       - name: "Tar mx-scenario-go"
         run: |
           SCENARIO_PATH=$(which mx-scenario-go)
