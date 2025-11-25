@@ -165,6 +165,13 @@ jobs:
           overwrite: true
           path: mx_scenario_go.tar
 
+      - name: Cleanup
+        run: |
+          rm -f binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
+          rm -f sc_meta.tar
+          rm -f mx_scenario_go.tar
+          rm -rf binaryen-version_${{ inputs.wasm-opt-version }}
+
   wasm_test:
     name: Wasm tests
     needs: setup
@@ -289,6 +296,9 @@ jobs:
           body: ${{ steps.template.outputs.result }}
           edit-mode: replace
 
+      - name: Cleanup
+        run: rm -rf tools
+
   interactor_tests:
     name: Interactor tests
     needs: setup
@@ -350,6 +360,9 @@ jobs:
         env:
           RUSTFLAGS: ""
         run: sc-meta cs stop
+
+      - name: Cleanup
+        run: rm -rf tools
 
   test_coverage:
     name: Test Coverage
@@ -424,6 +437,9 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body-file: ./coverage.md
           edit-mode: replace
+
+      - name: Cleanup
+        run: rm -rf tools
 
   rust_test:
     name: Rust tests
