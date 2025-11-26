@@ -44,6 +44,11 @@ on:
         default: ""
         required: false
         type: string
+      wasm-opt-version:
+        description: "The wasm-opt version to use"
+        default: "108"
+        required: false
+        type: string
       path-to-sc-meta:
         description: "multiversx-sc-meta from local"
         default: ""
@@ -87,11 +92,15 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Install System Dependencies
-        if: ${{ !contains(inputs.setup-runs-on, 'self-hosted') }}
+      - name: Install Wasm-Opt
         run: |
-          sudo apt-get update && sudo apt-get install -y binaryen
-          cargo install twiggy
+          wget https://github.com/WebAssembly/binaryen/releases/download/version_${{ inputs.wasm-opt-version }}/binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
+          tar -xvf binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
+          echo "$(pwd)/binaryen-version_${{ inputs.wasm-opt-version }}/bin" >> $GITHUB_PATH
+
+      - name: Install Twiggy
+        if: ${{ !contains(inputs.setup-runs-on, 'self-hosted') }}
+        run: cargo install twiggy
 
       - name: Install prerequisites
         run: |
@@ -118,13 +127,14 @@ jobs:
 
           sc-meta --version
           mx-scenario-go --version
+          wasm-opt --version
 
       - name: "Tar sc-meta"
         run: |
           tar -cvf sc_meta.tar \
             "$(which sc-meta)" \
             "$(which wasm-opt)" \
-            "$(find /usr -name "libbinaryen.so" -print -quit 2>/dev/null)"
+            "$(find "$(pwd)/binaryen-version_${{ inputs.wasm-opt-version }}" -name "libbinaryen.a")"
 
       - name: "Tar mx-scenario-go"
         run: |
@@ -154,6 +164,13 @@ jobs:
           retention-days: 1
           overwrite: true
           path: mx_scenario_go.tar
+
+      - name: Cleanup
+        run: |
+          rm -f binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
+          rm -f sc_meta.tar
+          rm -f mx_scenario_go.tar
+          rm -rf binaryen-version_${{ inputs.wasm-opt-version }}
 
   wasm_test:
     name: Wasm tests
@@ -196,6 +213,7 @@ jobs:
           done
 
           find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
@@ -278,6 +296,9 @@ jobs:
           body: ${{ steps.template.outputs.result }}
           edit-mode: replace
 
+      - name: Cleanup
+        run: rm -rf tools
+
   interactor_tests:
     name: Interactor tests
     needs: setup
@@ -313,6 +334,7 @@ jobs:
           done
 
           find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
@@ -338,6 +360,9 @@ jobs:
         env:
           RUSTFLAGS: ""
         run: sc-meta cs stop
+
+      - name: Cleanup
+        run: rm -rf tools
 
   test_coverage:
     name: Test Coverage
@@ -378,6 +403,7 @@ jobs:
             fi
           done
           find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> $GITHUB_PATH
 
@@ -411,6 +437,9 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body-file: ./coverage.md
           edit-mode: replace
+
+      - name: Cleanup
+        run: rm -rf tools
 
   rust_test:
     name: Rust tests
