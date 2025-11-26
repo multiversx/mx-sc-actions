@@ -86,7 +86,7 @@ The following configuration entries are available:
 - `contract_name`: a specific contract to be built. If not specified, all contracts in the workspace (repository) are built.
 - `create_release`: whether to create a new release (and upload the build artifacts as assets).
 - `attach_to_existing_release`: whether to upload the build artifacts on an existing release. This only works if the current `github.ref_name` (of the executing workflow) is associated with an existing release.
-- `skip_preliminary_checks`: whether to skip the preliminary checks. This is **not recommended** for production use.
+- `skip_preliminary_checks`: whether to skip the preliminary checks. **Never set this in production!**
 - `package_whole_project_src`: whether to include all project files in the packaged source (`*.source.json`).
 
 Note that `create_release` and `attach_to_existing_release` are mutually exclusive.
