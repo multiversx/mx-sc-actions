@@ -82,391 +82,59 @@ on:
 jobs:
   setup:
     name: Setup Environment
-    runs-on: ${{ inputs.setup-runs-on || inputs.runs-on }}
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ inputs.rust-toolchain }}
-          target: ${{ inputs.rust-target }}
-
-      - name: Install Wasm-Opt
-        run: |
-          wget https://github.com/WebAssembly/binaryen/releases/download/version_${{ inputs.wasm-opt-version }}/binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
-          tar -xvf binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
-          echo "$(pwd)/binaryen-version_${{ inputs.wasm-opt-version }}/bin" >> $GITHUB_PATH
-
-      - name: Install Twiggy
-        if: ${{ !contains(inputs.setup-runs-on, 'self-hosted') }}
-        run: cargo install twiggy
-
-      - name: Install prerequisites
-        run: |
-          if [[ -n "${{ inputs.path-to-sc-meta }}" ]];
-          then
-              cargo install --path ${{ inputs.path-to-sc-meta }} --force
-          elif [[ -z "${{ inputs.sc-meta-version }}" ]];
-          then
-              cargo install multiversx-sc-meta --locked --force
-          else
-              cargo install multiversx-sc-meta --version ${{ inputs.sc-meta-version }} --locked --force
-          fi
-
-          if [[ -z "${{ inputs.mx-scenario-go-version }}" ]];
-          then
-              sc-meta install mx-scenario-go
-          else
-              sc-meta install mx-scenario-go --tag ${{ inputs.mx-scenario-go-version }}
-          fi
-
-          which wasm-opt
-          which sc-meta
-          which mx-scenario-go
-
-          sc-meta --version
-          mx-scenario-go --version
-          wasm-opt --version
-
-      - name: "Tar sc-meta"
-        run: |
-          tar -cvf sc_meta.tar \
-            "$(which sc-meta)" \
-            "$(which wasm-opt)" \
-            "$(find "$(pwd)/binaryen-version_${{ inputs.wasm-opt-version }}" -name "libbinaryen.a")"
-
-      - name: "Tar mx-scenario-go"
-        run: |
-          SCENARIO_PATH=$(which mx-scenario-go)
-
-          LIB_WASMER=$(find $HOME -name "libwasmer_linux_amd64.so" -print -quit)
-          LIB_C_API=$(find $HOME -name "libvmexeccapi.so" -print -quit)
-
-          echo "Found Binary: $SCENARIO_PATH"
-          echo "Found Wasmer: $LIB_WASMER"
-          echo "Found VM lib: $LIB_C_API"
-
-          tar -cvf mx_scenario_go.tar "$SCENARIO_PATH" "$LIB_WASMER" "$LIB_C_API"
-
-      - name: Upload sc-meta artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: sc-meta
-          retention-days: 1
-          overwrite: true
-          path: sc_meta.tar
-
-      - name: Upload mx-scenario-go artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: mx-scenario-go
-          retention-days: 1
-          overwrite: true
-          path: mx_scenario_go.tar
-
-      - name: Cleanup
-        run: |
-          rm -f binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
-          rm -f sc_meta.tar
-          rm -f mx_scenario_go.tar
-          rm -rf binaryen-version_${{ inputs.wasm-opt-version }}
+    uses: ./.github/workflows/setup.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.setup-runs-on || inputs.runs-on }}
+      rust-target: ${{ inputs.rust-target }}
+      sc-meta-version: ${{ inputs.sc-meta-version }}
+      mx-scenario-go-version: ${{ inputs.mx-scenario-go-version }}
+      wasm-opt-version: ${{ inputs.wasm-opt-version }}
+      path-to-sc-meta: ${{ inputs.path-to-sc-meta }}
 
   wasm_test:
     name: Wasm tests
     needs: setup
-    runs-on: ${{ inputs.wasm-test-runs-on || inputs.runs-on }}
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ inputs.rust-toolchain }}
-          target: ${{ inputs.rust-target }}
-
-      - name: Create local tools directory
-        run: mkdir -p tools
-
-      - name: Download sc-meta artifact
-        uses: actions/download-artifact@v6
-        with:
-          name: sc-meta
-          path: tools
-
-      - name: Download mx-scenario-go artifact
-        uses: actions/download-artifact@v6
-        with:
-          name: mx-scenario-go
-          path: tools
-
-      - name: Set tools' path
-        run: |
-          tar -xvf tools/sc_meta.tar -C tools
-          tar -xvf tools/mx_scenario_go.tar -C tools
-
-          for tool in sc-meta mx-scenario-go wasm-opt; do
-            FOUND=$(find tools -name "$tool" -type f | head -n1)
-            if [ -n "$FOUND" ]; then
-              mv "$FOUND" tools/
-            fi
-          done
-
-          find tools -name "*.so" -type f -exec mv {} tools/ \;
-          find tools -name "*.a" -type f -exec mv {} tools/ \;
-          find tools -type d -empty -delete
-          echo "$(pwd)/tools" >> $GITHUB_PATH
-
-      - name: Build the wasm contracts
-        env:
-          RUSTFLAGS: ""
-        run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
-          sc-meta all build --no-imports --target-dir $(pwd)/target --path .
-
-      - name: Run the wasm tests
-        env:
-          RUSTFLAGS: ""
-        run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
-          sc-meta test --go
-
-      - name: Generate the contract report
-        if: ${{ inputs.enable-contracts-size-report }}
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta report compile --path . --output report.json
-
-      - name: Upload the report json
-        if: ${{ inputs.enable-contracts-size-report }}
-        uses: actions/upload-artifact@v5
-        with:
-          name: report
-          path: report.json
-
-      - name: Download the base report
-        uses: dawidd6/action-download-artifact@v11
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        continue-on-error: true
-        with:
-          workflow: actions.yml
-          name: report
-          commit: ${{ github.event.pull_request.base.sha }}
-          path: base-report
-
-      - name: Generate the report template
-        if: ${{ github.event_name == 'pull_request'  && inputs.enable-contracts-size-report }}
-        run: |
-          echo "Contract comparison - from {{ .base }} to {{ .head }}" > report.md
-          sc-meta report compare --baseline base-report/report.json --new report.json --output report-table.md
-          cat report-table.md >> report.md
-
-      - name: Render the report from the template
-        id: template
-        uses: chuhlomin/render-template@v1
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        with:
-          template: report.md
-          vars: |
-            base: ${{ github.event.pull_request.base.sha }}
-            head: ${{ github.event.pull_request.head.sha }}
-
-      - name: Upload the report markdown
-        uses: actions/upload-artifact@v5
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        with:
-          name: report-markdown
-          path: report.md
-
-      - name: Find the comment containing the report
-        id: fc
-        uses: peter-evans/find-comment@v4
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: "github-actions[bot]"
-          body-includes: "Contract comparison"
-
-      - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v5
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.template.outputs.result }}
-          edit-mode: replace
-
-      - name: Cleanup
-        run: rm -rf tools
+    uses: ./.github/workflows/wasm-tests.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.wasm-test-runs-on || inputs.runs-on }}
+      rust-target: ${{ inputs.rust-target }}
+      enable-contracts-size-report: ${{ inputs.enable-contracts-size-report }}
 
   interactor_tests:
     name: Interactor tests
     needs: setup
-    runs-on: ${{ inputs.interactor-tests-runs-on || inputs.runs-on }}
     if: inputs.enable-interactor-tests
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ inputs.rust-toolchain }}
-          target: ${{ inputs.rust-target }}
-
-      - name: Create local tools directory
-        run: mkdir -p tools
-
-      - name: Download sc-meta artifact
-        uses: actions/download-artifact@v6
-        with:
-          name: sc-meta
-          path: tools
-
-      - name: Make sc-meta executable
-        run: |
-          tar -xvf tools/sc_meta.tar -C tools
-
-          for tool in sc-meta wasm-opt; do
-            FOUND=$(find tools -name "$tool" -type f | head -n1)
-            if [ -n "$FOUND" ]; then
-              mv "$FOUND" tools/
-            fi
-          done
-
-          find tools -name "*.so" -type f -exec mv {} tools/ \;
-          find tools -name "*.a" -type f -exec mv {} tools/ \;
-          find tools -type d -empty -delete
-          echo "$(pwd)/tools" >> $GITHUB_PATH
-
-      - name: Build the wasm contracts
-        env:
-          RUSTFLAGS: ""
-        run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
-          sc-meta all build --no-imports --target-dir $(pwd)/target --path .
-
-      - name: Pull latest chain simulator docker image
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs install
-
-      - name: Run the interactor tests
-        continue-on-error: false
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs start & cargo test --features chain-simulator-tests
-
-      - name: Stop the chain simulator
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs stop
-
-      - name: Cleanup
-        run: rm -rf tools
+    uses: ./.github/workflows/interactor-tests.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.interactor-tests-runs-on || inputs.runs-on }}
+      rust-target: ${{ inputs.rust-target }}
 
   test_coverage:
     name: Test Coverage
     needs: setup
-    runs-on: ${{ inputs.test-coverage-runs-on || inputs.runs-on }}
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ inputs.rust-toolchain }}
-          target: ${{ inputs.rust-target }}
-
-      - name: Install LLVM
-        run: |
-          rustup component add llvm-tools-preview
-          dirname $(find ~/.rustup -name llvm-cov) >> $GITHUB_PATH
-          echo $(dirname $(find ~/.rustup -name llvm-cov))
-
-      - name: Create local tools directory
-        run: mkdir -p tools
-
-      - name: Download sc-meta artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: sc-meta
-          path: tools
-
-      - name: Make sc-meta executable
-        run: |
-          tar -xvf tools/sc_meta.tar -C tools
-
-          for tool in sc-meta wasm-opt; do
-            FOUND=$(find tools -name "$tool" -type f | head -n1)
-            if [ -n "$FOUND" ]; then
-              mv "$FOUND" tools/
-            fi
-          done
-          find tools -name "*.so" -type f -exec mv {} tools/ \;
-          find tools -name "*.a" -type f -exec mv {} tools/ \;
-          find tools -type d -empty -delete
-          echo "$(pwd)/tools" >> $GITHUB_PATH
-
-      - name: Run tests and generate report
-        env:
-          RUSTFLAGS: ""
-        run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
-          sc-meta test-coverage ${{ inputs.coverage-args }}
-
-      - name: Upload the report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.md
-
-      - name: Find the comment containing the report
-        id: fc
-        uses: peter-evans/find-comment@v4
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: "github-actions[bot]"
-          body-includes: "Coverage Summary"
-
-      - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v5
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-file: ./coverage.md
-          edit-mode: replace
-
-      - name: Cleanup
-        run: rm -rf tools
+    uses: ./.github/workflows/coverage.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.test-coverage-runs-on || inputs.runs-on }}
+      rust-target: ${{ inputs.rust-target }}
+      coverage-args: ${{ inputs.coverage-args }}
 
   rust_test:
     name: Rust tests
-    runs-on: ${{ inputs.runs-on }}
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ inputs.rust-toolchain }}
-
-      - name: Run the rust tests
-        env:
-          RUSTFLAGS: ""
-        run: cargo test
+    uses: ./.github/workflows/rust-tests.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.runs-on }}
 
   clippy_check:
     name: Clippy linter check
-    runs-on: ${{ inputs.runs-on }}
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ inputs.rust-toolchain }}
-          components: clippy
-      - uses: giraffate/clippy-action@v1
-        env:
-          RUSTFLAGS: ""
-        with:
-          github_token: ${{ github.token }}
-          clippy_flags: ${{ inputs.clippy-args }}
+    uses: ./.github/workflows/clippy-check.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.runs-on }}
+      clippy-args: ${{ inputs.clippy-args }}
+    secrets:
+      token: ${{ secrets.token }}
