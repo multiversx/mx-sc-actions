@@ -1,4 +1,4 @@
-name: Generate Contract Report
+name: MultiversX Contracts
 
 on:
   workflow_call:

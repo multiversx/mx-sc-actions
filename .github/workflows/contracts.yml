@@ -1,4 +1,4 @@
-name: Contracts builds and tests
+name: MultiversX Full Suite
 
 on:
   workflow_call:

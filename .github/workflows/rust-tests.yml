@@ -1,4 +1,4 @@
-name: Rust Tests
+name: MultiversX Contracts
 
 on:
   workflow_call:
