@@ -69,13 +69,11 @@ jobs:
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> "$GITHUB_PATH"
 
-      - name: Build the wasm contracts
-        env:
-          RUSTFLAGS: ""
-        run: |
-          LD_LIBRARY_PATH="$(pwd)/tools"
-          export LD_LIBRARY_PATH
-          sc-meta all build --no-imports --target-dir "$(pwd)/target" --path .
+      - name: Download built contracts
+        uses: actions/download-artifact@v6
+        with:
+          name: built-contracts
+          path: .
 
       - name: Run the wasm tests
         env:

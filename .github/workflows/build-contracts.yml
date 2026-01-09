@@ -1,4 +1,4 @@
-name: Interactor Tests
+name: Build Contracts
 
 on:
   workflow_call:
@@ -20,8 +20,7 @@ on:
         type: string
 
 jobs:
-  interactor_tests:
-    name: Interactor tests
+  run:
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
@@ -57,27 +56,21 @@ jobs:
           find tools -type d -empty -delete
           echo "$(pwd)/tools" >> "$GITHUB_PATH"
 
-      - name: Download built contracts
-        uses: actions/download-artifact@v6
+      - name: Build the wasm contracts
+        env:
+          RUSTFLAGS: ""
+        run: |
+          LD_LIBRARY_PATH="$(pwd)/tools"
+          export LD_LIBRARY_PATH
+          sc-meta all build --no-imports --target-dir "$(pwd)/target" --path .
+
+      - name: Upload built contracts
+        uses: actions/upload-artifact@v5
         with:
           name: built-contracts
-          path: .
-
-      - name: Pull latest chain simulator docker image
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs install
-
-      - name: Run the interactor tests
-        continue-on-error: false
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs start & cargo test --features chain-simulator-tests
-
-      - name: Stop the chain simulator
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs stop
+          retention-days: 1
+          path: |
+            **/output/*.wasm
 
       - name: Cleanup
         run: rm -rf tools

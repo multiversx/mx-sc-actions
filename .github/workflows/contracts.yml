@@ -92,9 +92,18 @@ jobs:
       wasm-opt-version: ${{ inputs.wasm-opt-version }}
       path-to-sc-meta: ${{ inputs.path-to-sc-meta }}
 
+  build_contracts:
+    name: Build Contracts
+    needs: setup
+    uses: ./.github/workflows/build-contracts.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.runs-on }}
+      rust-target: ${{ inputs.rust-target }}
+
   wasm_test:
     name: Wasm tests
-    needs: setup
+    needs: build_contracts
     uses: ./.github/workflows/wasm-tests.yml
     with:
       rust-toolchain: ${{ inputs.rust-toolchain }}
@@ -104,7 +113,7 @@ jobs:
 
   interactor_tests:
     name: Interactor tests
-    needs: setup
+    needs: build_contracts
     if: inputs.enable-interactor-tests
     uses: ./.github/workflows/interactor-tests.yml
     with:
