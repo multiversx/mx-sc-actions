@@ -56,7 +56,7 @@ jobs:
         run: |
           wget https://github.com/WebAssembly/binaryen/releases/download/version_${{ inputs.wasm-opt-version }}/binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
           tar -xvf binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
-          echo "$(pwd)/binaryen-version_${{ inputs.wasm-opt-version }}/bin" >> $GITHUB_PATH
+          echo "$(pwd)/binaryen-version_${{ inputs.wasm-opt-version }}/bin" >> "$GITHUB_PATH"
 
       - name: Install Twiggy
         if: ${{ !contains(inputs.runs-on, 'self-hosted') }}
@@ -100,8 +100,8 @@ jobs:
         run: |
           SCENARIO_PATH=$(which mx-scenario-go)
 
-          LIB_WASMER=$(find $HOME -name "libwasmer_linux_amd64.so" -print -quit)
-          LIB_C_API=$(find $HOME -name "libvmexeccapi.so" -print -quit)
+          LIB_WASMER=$(find "$HOME" -name "libwasmer_linux_amd64.so" -print -quit)
+          LIB_C_API=$(find "$HOME" -name "libvmexeccapi.so" -print -quit)
 
           echo "Found Binary: $SCENARIO_PATH"
           echo "Found Wasmer: $LIB_WASMER"

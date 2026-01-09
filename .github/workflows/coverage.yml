@@ -40,8 +40,8 @@ jobs:
       - name: Install LLVM
         run: |
           rustup component add llvm-tools-preview
-          dirname $(find ~/.rustup -name llvm-cov) >> $GITHUB_PATH
-          echo $(dirname $(find ~/.rustup -name llvm-cov))
+          dirname "$(find ~/.rustup -name llvm-cov)" >> "$GITHUB_PATH"
+          dirname "$(find ~/.rustup -name llvm-cov)"
 
       - name: Create local tools directory
         run: mkdir -p tools
@@ -65,13 +65,14 @@ jobs:
           find tools -name "*.so" -type f -exec mv {} tools/ \;
           find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
-          echo "$(pwd)/tools" >> $GITHUB_PATH
+          echo "$(pwd)/tools" >> "$GITHUB_PATH"
 
       - name: Run tests and generate report
         env:
           RUSTFLAGS: ""
         run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
+          LD_LIBRARY_PATH="$(pwd)/tools"
+          export LD_LIBRARY_PATH
           sc-meta test-coverage ${{ inputs.coverage-args }}
 
       - name: Upload the report

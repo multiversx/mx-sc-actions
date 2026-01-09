@@ -55,14 +55,15 @@ jobs:
           find tools -name "*.so" -type f -exec mv {} tools/ \;
           find tools -name "*.a" -type f -exec mv {} tools/ \;
           find tools -type d -empty -delete
-          echo "$(pwd)/tools" >> $GITHUB_PATH
+          echo "$(pwd)/tools" >> "$GITHUB_PATH"
 
       - name: Build the wasm contracts
         env:
           RUSTFLAGS: ""
         run: |
-          export LD_LIBRARY_PATH=$(pwd)/tools
-          sc-meta all build --no-imports --target-dir $(pwd)/target --path .
+          LD_LIBRARY_PATH="$(pwd)/tools"
+          export LD_LIBRARY_PATH
+          sc-meta all build --no-imports --target-dir "$(pwd)/target" --path .
 
       - name: Pull latest chain simulator docker image
         env:
