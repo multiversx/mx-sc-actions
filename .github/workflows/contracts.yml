@@ -109,7 +109,6 @@ jobs:
       rust-toolchain: ${{ inputs.rust-toolchain }}
       runs-on: ${{ inputs.wasm-test-runs-on || inputs.runs-on }}
       rust-target: ${{ inputs.rust-target }}
-      enable-contracts-size-report: ${{ inputs.enable-contracts-size-report }}
 
   interactor_tests:
     name: Interactor tests
@@ -119,6 +118,16 @@ jobs:
     with:
       rust-toolchain: ${{ inputs.rust-toolchain }}
       runs-on: ${{ inputs.interactor-tests-runs-on || inputs.runs-on }}
+      rust-target: ${{ inputs.rust-target }}
+
+  generate_report:
+    name: Generate Report
+    needs: build_contracts
+    if: inputs.enable-contracts-size-report
+    uses: ./.github/workflows/report.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.runs-on }}
       rust-target: ${{ inputs.rust-target }}
 
   test_coverage:

@@ -13,16 +13,6 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
-      rust-target:
-        description: "Rust target to use"
-        default: "wasm32-unknown-unknown"
-        required: false
-        type: string
-      enable-contracts-size-report:
-        description: "Enable contracts size report"
-        default: true
-        required: false
-        type: boolean
 
 jobs:
   wasm_test:
@@ -35,7 +25,6 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: ${{ inputs.rust-target }}
 
       - name: Create local tools directory
         run: mkdir -p tools
@@ -82,71 +71,6 @@ jobs:
           LD_LIBRARY_PATH="$(pwd)/tools"
           export LD_LIBRARY_PATH
           sc-meta test --go
-
-      - name: Generate the contract report
-        if: ${{ inputs.enable-contracts-size-report }}
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta report compile --path . --output report.json
-
-      - name: Upload the report json
-        if: ${{ inputs.enable-contracts-size-report }}
-        uses: actions/upload-artifact@v5
-        with:
-          name: report
-          path: report.json
-
-      - name: Download the base report
-        uses: dawidd6/action-download-artifact@v11
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        continue-on-error: true
-        with:
-          workflow: actions.yml
-          name: report
-          commit: ${{ github.event.pull_request.base.sha }}
-          path: base-report
-
-      - name: Generate the report template
-        if: ${{ github.event_name == 'pull_request'  && inputs.enable-contracts-size-report }}
-        run: |
-          echo "Contract comparison - from {{ .base }} to {{ .head }}" > report.md
-          sc-meta report compare --baseline base-report/report.json --new report.json --output report-table.md
-          cat report-table.md >> report.md
-
-      - name: Render the report from the template
-        id: template
-        uses: chuhlomin/render-template@v1
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        with:
-          template: report.md
-          vars: |
-            base: ${{ github.event.pull_request.base.sha }}
-            head: ${{ github.event.pull_request.head.sha }}
-
-      - name: Upload the report markdown
-        uses: actions/upload-artifact@v5
-        if: ${{ github.event_name == 'pull_request' && inputs.enable-contracts-size-report }}
-        with:
-          name: report-markdown
-          path: report.md
-
-      - name: Find the comment containing the report
-        id: fc
-        uses: peter-evans/find-comment@v4
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: "github-actions[bot]"
-          body-includes: "Contract comparison"
-
-      - name: Create or update the report comment
-        uses: peter-evans/create-or-update-comment@v5
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository  && inputs.enable-contracts-size-report }}
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.template.outputs.result }}
-          edit-mode: replace
 
       - name: Cleanup
         run: rm -rf tools

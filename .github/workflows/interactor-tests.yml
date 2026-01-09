@@ -13,11 +13,6 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
-      rust-target:
-        description: "Rust target to use"
-        default: "wasm32-unknown-unknown"
-        required: false
-        type: string
 
 jobs:
   interactor_tests:
@@ -30,7 +25,6 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ inputs.rust-toolchain }}
-          target: ${{ inputs.rust-target }}
 
       - name: Create local tools directory
         run: mkdir -p tools
