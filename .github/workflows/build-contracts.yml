@@ -1,5 +1,3 @@
-name: Build Contracts
-
 on:
   workflow_call:
     inputs:

@@ -1,5 +1,3 @@
-name: MultiversX Contracts
-
 on:
   workflow_call:
     inputs:
