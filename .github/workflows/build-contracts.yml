@@ -21,6 +21,7 @@ on:
 
 jobs:
   run:
+    name: Build Contracts
     runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v5
@@ -71,6 +72,7 @@ jobs:
           retention-days: 1
           path: |
             **/output/*.wasm
+            **/output/*.mxsc.json
 
       - name: Cleanup
         run: rm -rf tools
