@@ -52,7 +52,7 @@ jobs:
           toolchain: ${{ inputs.rust-toolchain }}
           target: ${{ inputs.rust-target }}
 
-      - name: Install Wasm-Opt
+      - name: Install wasm-opt
         run: |
           wget https://github.com/WebAssembly/binaryen/releases/download/version_${{ inputs.wasm-opt-version }}/binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
           tar -xvf binaryen-version_${{ inputs.wasm-opt-version }}-x86_64-linux.tar.gz
