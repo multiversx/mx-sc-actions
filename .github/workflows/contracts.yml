@@ -92,7 +92,7 @@ jobs:
       wasm-opt-version: ${{ inputs.wasm-opt-version }}
       path-to-sc-meta: ${{ inputs.path-to-sc-meta }}
 
-  build_contracts:
+  build-contracts:
     name: Build Contracts
     needs: setup
     uses: ./.github/workflows/build-contracts.yml
@@ -101,18 +101,18 @@ jobs:
       runs-on: ${{ inputs.runs-on }}
       rust-target: ${{ inputs.rust-target }}
 
-  wasm_test:
+  wasm-tests:
     name: Wasm tests
-    needs: build_contracts
+    needs: build-contracts
     uses: ./.github/workflows/wasm-tests.yml
     with:
       rust-toolchain: ${{ inputs.rust-toolchain }}
       runs-on: ${{ inputs.wasm-test-runs-on || inputs.runs-on }}
       rust-target: ${{ inputs.rust-target }}
 
-  interactor_tests:
+  interactor-tests:
     name: Interactor tests
-    needs: build_contracts
+    needs: build-contracts
     if: inputs.enable-interactor-tests
     uses: ./.github/workflows/interactor-tests.yml
     with:
@@ -120,9 +120,9 @@ jobs:
       runs-on: ${{ inputs.interactor-tests-runs-on || inputs.runs-on }}
       rust-target: ${{ inputs.rust-target }}
 
-  generate_report:
+  generate-report:
     name: Generate Report
-    needs: build_contracts
+    needs: build-contracts
     if: inputs.enable-contracts-size-report
     uses: ./.github/workflows/report.yml
     with:
@@ -130,7 +130,7 @@ jobs:
       runs-on: ${{ inputs.runs-on }}
       rust-target: ${{ inputs.rust-target }}
 
-  test_coverage:
+  test-coverage:
     name: Test Coverage
     needs: setup
     uses: ./.github/workflows/coverage.yml
@@ -140,14 +140,14 @@ jobs:
       rust-target: ${{ inputs.rust-target }}
       coverage-args: ${{ inputs.coverage-args }}
 
-  rust_test:
+  rust-tests:
     name: Rust tests
     uses: ./.github/workflows/rust-tests.yml
     with:
       rust-toolchain: ${{ inputs.rust-toolchain }}
       runs-on: ${{ inputs.runs-on }}
 
-  clippy_check:
+  clippy-check:
     name: Clippy linter check
     uses: ./.github/workflows/clippy-check.yml
     with:
