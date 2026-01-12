@@ -51,9 +51,7 @@ jobs:
           echo "$(pwd)/tools" >> "$GITHUB_PATH"
 
       - name: Run proxy compare
-        run: |
-          cd contracts
-          sc-meta all proxy --compare
+        run: sc-meta all proxy --compare
 
       - name: Cleanup
         run: rm -rf tools
