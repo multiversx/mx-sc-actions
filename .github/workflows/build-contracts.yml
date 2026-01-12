@@ -18,7 +18,7 @@ on:
         type: string
 
 jobs:
-  run:
+  build-contracts:
     name: Build Contracts
     runs-on: ${{ inputs.runs-on }}
     steps:

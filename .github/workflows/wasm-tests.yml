@@ -13,7 +13,7 @@ on:
         type: string
 
 jobs:
-  wasm_test:
+  wasm-tests:
     name: Wasm tests
     runs-on: ${{ inputs.runs-on }}
     steps:

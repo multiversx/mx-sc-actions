@@ -164,6 +164,6 @@ jobs:
         env:
           RUSTFLAGS: ""
         with:
-          github_token: ${{ secrets.token }}
+          github_token: ${{ github.token }}
           clippy_flags: ${{ inputs.clippy-args }}
 

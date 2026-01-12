@@ -23,7 +23,7 @@ on:
         type: string
 
 jobs:
-  test_coverage:
+  test-coverage:
     name: Test Coverage
     runs-on: ${{ inputs.runs-on }}
     steps:

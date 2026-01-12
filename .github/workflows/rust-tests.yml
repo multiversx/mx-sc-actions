@@ -13,7 +13,7 @@ on:
         type: string
 
 jobs:
-  rust_test:
+  rust-tests:
     name: Rust tests
     runs-on: ${{ inputs.runs-on }}
     steps:

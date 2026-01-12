@@ -13,7 +13,7 @@ on:
         type: string
 
 jobs:
-  run:
+  contract-report:
     name: Contract Report
     runs-on: ${{ inputs.runs-on }}
     steps:
