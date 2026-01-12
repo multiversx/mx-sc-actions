@@ -8,6 +8,7 @@ A Github Action for smart contracts which:
 - does a clippy check
 - provides a report containing details about the smart contracts
 - if enabled, provides a coverage report
+- if enabled, validates proxy generation
 
 ## Usage of `contracts.yml`
 
@@ -34,6 +35,9 @@ jobs:
     uses: multiversx/mx-sc-actions/.github/workflows/contracts.yml@vMajor.Minor.Patch
     with:
       rust-toolchain: 1.86
+      enable-interactor-tests: false  # optional, default: false
+      enable-contracts-size-report: true  # optional, default: true
+      enable-proxy-compare: true  # optional, default: true
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -83,6 +87,7 @@ See [contracts.yml](.github/workflows/contracts.yml) in `inputs` section for all
 - Wasm Tests
 - Interactor Tests (if enabled)
 - Contract Report (if enabled)
+- Proxy Compare (if enabled)
 - Test Coverage
 - Rust Tests
 - Clippy Check

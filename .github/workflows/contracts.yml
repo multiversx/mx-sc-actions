@@ -69,6 +69,11 @@ on:
         default: false
         required: false
         type: boolean
+      enable-proxy-compare:
+        description: "Enable proxy compare check"
+        default: true
+        required: false
+        type: boolean
       coverage-args:
         description: "sc-meta test-coverage arguments"
         default: "--output ./coverage.md"
@@ -130,6 +135,7 @@ jobs:
   proxy-compare:
     name: Proxy Compare
     needs: setup
+    if: inputs.enable-proxy-compare
     uses: ./.github/workflows/proxy-compare.yml
     with:
       rust-toolchain: ${{ inputs.rust-toolchain }}
