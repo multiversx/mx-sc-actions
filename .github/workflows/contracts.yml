@@ -127,6 +127,14 @@ jobs:
       rust-toolchain: ${{ inputs.rust-toolchain }}
       runs-on: ${{ inputs.runs-on }}
 
+  proxy-compare:
+    name: Proxy Compare
+    needs: setup
+    uses: ./.github/workflows/proxy-compare.yml
+    with:
+      rust-toolchain: ${{ inputs.rust-toolchain }}
+      runs-on: ${{ inputs.runs-on }}
+
   test-coverage:
     name: Test Coverage
     needs: setup
