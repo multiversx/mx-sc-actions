@@ -108,7 +108,7 @@ jobs:
           tar -cvf mx_scenario_go.tar "$SCENARIO_PATH" "$LIB_WASMER" "$LIB_C_API"
 
       - name: Upload sc-meta artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: sc-meta
           retention-days: 1
@@ -116,7 +116,7 @@ jobs:
           path: sc_meta.tar
 
       - name: Upload mx-scenario-go artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: mx-scenario-go
           retention-days: 1

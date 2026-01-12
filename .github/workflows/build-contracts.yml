@@ -64,7 +64,7 @@ jobs:
           sc-meta all build --no-imports --target-dir "$(pwd)/target" --path .
 
       - name: Upload built contracts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: built-contracts
           retention-days: 1

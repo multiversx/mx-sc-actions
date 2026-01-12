@@ -61,13 +61,13 @@ jobs:
         run: sc-meta report compile --path . --output report.json
 
       - name: Upload the report json
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: report
           path: report.json
 
       - name: Download the base report
-        uses: dawidd6/action-download-artifact@v11
+        uses: dawidd6/action-download-artifact@v12
         if: ${{ github.event_name == 'pull_request' }}
         continue-on-error: true
         with:
@@ -94,7 +94,7 @@ jobs:
             head: ${{ github.event.pull_request.head.sha }}
 
       - name: Upload the report markdown
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: ${{ github.event_name == 'pull_request' }}
         with:
           name: report-markdown

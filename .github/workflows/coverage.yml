@@ -45,7 +45,7 @@ jobs:
         run: mkdir -p tools
 
       - name: Download sc-meta artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: sc-meta
           path: tools
@@ -74,7 +74,7 @@ jobs:
           sc-meta test-coverage ${{ inputs.coverage-args }}
 
       - name: Upload the report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage
           path: coverage.md
