@@ -1,0 +1,101 @@
+on:
+  workflow_call:
+    inputs:
+      rust-toolchain:
+        description: "Rust toolchain to use"
+        default: "stable"
+        required: false
+        type: string
+      runs-on:
+        description: "The type of machine to run the job on"
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      rust-target:
+        description: "Rust target to use"
+        default: "wasm32-unknown-unknown"
+        required: false
+        type: string
+      coverage-args:
+        description: "sc-meta test-coverage arguments"
+        default: "--output ./coverage.md"
+        required: false
+        type: string
+
+jobs:
+  test-coverage:
+    name: Test Coverage
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+          target: ${{ inputs.rust-target }}
+
+      - name: Install LLVM
+        run: |
+          rustup component add llvm-tools-preview
+          dirname "$(find ~/.rustup -name llvm-cov)" >> "$GITHUB_PATH"
+          dirname "$(find ~/.rustup -name llvm-cov)"
+
+      - name: Create local tools directory
+        run: mkdir -p tools
+
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: sc-meta
+          path: tools
+
+      - name: Make sc-meta executable
+        run: |
+          tar -xvf tools/sc_meta.tar -C tools
+
+          for tool in sc-meta wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
+          find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
+          find tools -type d -empty -delete
+          echo "$(pwd)/tools" >> "$GITHUB_PATH"
+
+      - name: Run tests and generate report
+        env:
+          RUSTFLAGS: ""
+        run: |
+          LD_LIBRARY_PATH="$(pwd)/tools"
+          export LD_LIBRARY_PATH
+          sc-meta test-coverage ${{ inputs.coverage-args }}
+
+      - name: Upload the report
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage
+          path: coverage.md
+
+      - name: Find the comment containing the report
+        id: fc
+        uses: peter-evans/find-comment@v4
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "Coverage Summary"
+
+      - name: Create or update the report comment
+        uses: peter-evans/create-or-update-comment@v5
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-file: ./coverage.md
+          edit-mode: replace
+
+      - name: Cleanup
+        run: rm -rf tools

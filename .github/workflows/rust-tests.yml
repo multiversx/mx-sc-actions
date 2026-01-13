@@ -1,0 +1,28 @@
+on:
+  workflow_call:
+    inputs:
+      rust-toolchain:
+        description: "Rust toolchain to use"
+        default: "stable"
+        required: false
+        type: string
+      runs-on:
+        description: "The type of machine to run the job on"
+        default: "ubuntu-latest"
+        required: false
+        type: string
+
+jobs:
+  rust-tests:
+    name: Rust tests
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+
+      - name: Run the rust tests
+        env:
+          RUSTFLAGS: ""
+        run: cargo test

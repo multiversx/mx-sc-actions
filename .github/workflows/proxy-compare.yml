@@ -1,0 +1,57 @@
+on:
+  workflow_call:
+    inputs:
+      rust-toolchain:
+        description: "Rust toolchain to use"
+        default: "stable"
+        required: false
+        type: string
+      runs-on:
+        description: "The type of machine to run the job on"
+        default: "ubuntu-latest"
+        required: false
+        type: string
+
+jobs:
+  proxy-compare:
+    name: Proxy Compare - newly generated vs. present in file tree
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ inputs.rust-toolchain }}
+
+      - name: Create local tools directory
+        run: mkdir -p tools
+
+      - name: Download sc-meta artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: sc-meta
+          path: tools
+
+      - name: Make sc-meta executable
+        run: |
+          tar -xvf tools/sc_meta.tar -C tools
+
+          for tool in sc-meta wasm-opt; do
+            FOUND=$(find tools -name "$tool" -type f | head -n1)
+            if [ -n "$FOUND" ]; then
+              mv "$FOUND" tools/
+            fi
+          done
+
+          find tools -name "*.so" -type f -exec mv {} tools/ \;
+          find tools -name "*.a" -type f -exec mv {} tools/ \;
+          find tools -type d -empty -delete
+          echo "$(pwd)/tools" >> "$GITHUB_PATH"
+
+      - name: Run proxy compare
+        run: sc-meta all proxy --compare
+
+      - name: Cleanup
+        run: rm -rf tools
