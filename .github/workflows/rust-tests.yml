@@ -16,6 +16,7 @@ jobs:
   rust-tests:
     name: Rust tests
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1

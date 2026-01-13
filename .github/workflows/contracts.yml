@@ -160,6 +160,7 @@ jobs:
   clippy-check:
     name: Clippy linter check
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1

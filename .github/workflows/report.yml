@@ -16,6 +16,7 @@ jobs:
   contract-report:
     name: Contract Report
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
 
@@ -63,7 +64,8 @@ jobs:
       - name: Upload the report json
         uses: actions/upload-artifact@v6
         with:
-          name: report
+          name: report-${{ github.run_id }}
+          retention-days: 1
           path: report.json
 
       - name: Download the base report
@@ -97,7 +99,8 @@ jobs:
         uses: actions/upload-artifact@v6
         if: ${{ github.event_name == 'pull_request' }}
         with:
-          name: report-markdown
+          name: report-markdown-${{ github.run_id }}
+          retention-days: 1
           path: report.md
 
       - name: Find the comment containing the report

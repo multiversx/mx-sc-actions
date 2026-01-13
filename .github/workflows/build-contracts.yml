@@ -21,6 +21,7 @@ jobs:
   build-contracts:
     name: Build Contracts
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v5
 

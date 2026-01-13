@@ -16,6 +16,7 @@ jobs:
   proxy-compare:
     name: Proxy Compare - newly generated vs. present in file tree
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

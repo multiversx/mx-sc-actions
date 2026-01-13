@@ -26,6 +26,7 @@ jobs:
   test-coverage:
     name: Test Coverage
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v5
 
@@ -76,7 +77,8 @@ jobs:
       - name: Upload the report
         uses: actions/upload-artifact@v6
         with:
-          name: coverage
+          name: coverage-${{ github.run_id }}
+          retention-days: 1
           path: coverage.md
 
       - name: Find the comment containing the report
