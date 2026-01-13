@@ -16,6 +16,7 @@ jobs:
   interactor-tests:
     name: Interactor tests
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 120
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -31,7 +32,7 @@ jobs:
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v6
         with:
-          name: sc-meta
+          name: sc-meta-${{ github.run_id }}
           path: tools
 
       - name: Make sc-meta executable
@@ -53,7 +54,7 @@ jobs:
       - name: Download built contracts
         uses: actions/download-artifact@v6
         with:
-          name: built-contracts
+          name: built-contracts-${{ github.run_id }}
           path: .
 
       - name: Pull latest chain simulator docker image
@@ -62,15 +63,27 @@ jobs:
         run: sc-meta cs install
 
       - name: Run the interactor tests
-        continue-on-error: false
         env:
           RUSTFLAGS: ""
-        run: sc-meta cs start & cargo test --features chain-simulator-tests
-
-      - name: Stop the chain simulator
-        env:
-          RUSTFLAGS: ""
-        run: sc-meta cs stop
+        run: |
+          # Start chain simulator in background
+          sc-meta cs start &
+          
+          # Wait for it to be ready
+          sleep 5
+          
+          # Run tests and capture exit code
+          cargo test --features chain-simulator-tests || TEST_RESULT=$?
+          
+          # Always stop the chain simulator
+          sc-meta cs stop
+          
+          # Exit with test result
+          exit ${TEST_RESULT:-0}
 
       - name: Cleanup
-        run: rm -rf tools
+        if: always()
+        run: |
+          # Ensure chain simulator is stopped
+          sc-meta cs stop 2>/dev/null || true
+          rm -rf tools

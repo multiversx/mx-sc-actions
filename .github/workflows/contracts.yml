@@ -84,6 +84,10 @@ on:
         description: "Github token"
         required: true
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   setup:
     name: Setup Environment
@@ -160,6 +164,7 @@ jobs:
   clippy-check:
     name: Clippy linter check
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rust-lang/setup-rust-toolchain@v1

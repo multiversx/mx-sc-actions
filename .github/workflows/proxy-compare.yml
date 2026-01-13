@@ -16,6 +16,7 @@ jobs:
   proxy-compare:
     name: Proxy Compare - newly generated vs. present in file tree
     runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -31,7 +32,7 @@ jobs:
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v6
         with:
-          name: sc-meta
+          name: sc-meta-${{ github.run_id }}
           path: tools
 
       - name: Make sc-meta executable
