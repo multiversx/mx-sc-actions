@@ -36,7 +36,7 @@ jobs:
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v6
         with:
-          name: sc-meta
+          name: sc-meta-${{ github.run_id }}
           path: tools
 
       - name: Make sc-meta executable
@@ -66,7 +66,7 @@ jobs:
       - name: Upload built contracts
         uses: actions/upload-artifact@v6
         with:
-          name: built-contracts
+          name: built-contracts-${{ github.run_id }}
           retention-days: 1
           path: |
             **/output/*.wasm

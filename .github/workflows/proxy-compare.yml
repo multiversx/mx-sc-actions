@@ -31,7 +31,7 @@ jobs:
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v6
         with:
-          name: sc-meta
+          name: sc-meta-${{ github.run_id }}
           path: tools
 
       - name: Make sc-meta executable

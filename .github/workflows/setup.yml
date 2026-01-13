@@ -110,7 +110,7 @@ jobs:
       - name: Upload sc-meta artifact
         uses: actions/upload-artifact@v6
         with:
-          name: sc-meta
+          name: sc-meta-${{ github.run_id }}
           retention-days: 1
           overwrite: true
           path: sc_meta.tar
@@ -118,7 +118,7 @@ jobs:
       - name: Upload mx-scenario-go artifact
         uses: actions/upload-artifact@v6
         with:
-          name: mx-scenario-go
+          name: mx-scenario-go-${{ github.run_id }}
           retention-days: 1
           overwrite: true
           path: mx_scenario_go.tar

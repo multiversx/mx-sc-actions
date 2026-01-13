@@ -30,13 +30,13 @@ jobs:
       - name: Download sc-meta artifact
         uses: actions/download-artifact@v6
         with:
-          name: sc-meta
+          name: sc-meta-${{ github.run_id }}
           path: tools
 
       - name: Download mx-scenario-go artifact
         uses: actions/download-artifact@v6
         with:
-          name: mx-scenario-go
+          name: mx-scenario-go-${{ github.run_id }}
           path: tools
 
       - name: Set tools' path
@@ -59,7 +59,7 @@ jobs:
       - name: Download built contracts
         uses: actions/download-artifact@v6
         with:
-          name: built-contracts
+          name: built-contracts-${{ github.run_id }}
           path: .
 
       - name: Run the wasm tests
