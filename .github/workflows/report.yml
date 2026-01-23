@@ -64,8 +64,8 @@ jobs:
       - name: Upload the report json
         uses: actions/upload-artifact@v6
         with:
-          name: report-${{ github.run_id }}
-          retention-days: 1
+          name: report
+          retention-days: 90
           path: report.json
 
       - name: Download the base report
