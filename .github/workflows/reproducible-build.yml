@@ -59,9 +59,9 @@ jobs:
 
       - name: Build contracts
         run: |
-          contract_flag=""
+          args=()
           if [[ -n "${{ inputs.contract_name }}" ]]; then
-            contract_flag="--contract ${{ inputs.contract_name }}"
+            args+=(--contract "${{ inputs.contract_name }}")
           fi
 
           sc-meta reproducible-build build \
@@ -70,7 +70,7 @@ jobs:
             --output /home/runner/work/output-from-docker \
             --no-docker-tty \
             --no-docker-interactive \
-            $contract_flag
+            "${args[@]}"
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4
@@ -82,7 +82,7 @@ jobs:
       - name: Create new release (if applicable)
         if: ${{ inputs.create_release == true }}
         run: |
-          gh release create ${{ github.ref_name }} --target=$GITHUB_SHA --prerelease --title="New release: ${{ github.ref_name }}" --generate-notes
+          gh release create "${{ github.ref_name }}" --target="$GITHUB_SHA" --prerelease --title="New release: ${{ github.ref_name }}" --generate-notes
           # Give some time for processing the request
           sleep 10
         env:
@@ -99,11 +99,11 @@ jobs:
       - name: Upload artifacts to release, edit release notes
         if: ${{ inputs.attach_to_existing_release == true || inputs.create_release == true }}
         run: |
-          gh release edit ${{ github.ref_name }} --notes-file=release_notes.txt
+          gh release edit "${{ github.ref_name }}" --notes-file=release_notes.txt
 
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker -name "*.wasm" -type f)
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker -name "*.source.json" -type f)
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker -name "*.abi.json" -type f)
-          gh release upload ${{ github.ref_name }} $(find /home/runner/work/output-from-docker -name "artifacts.json" -type f)
+          gh release upload "${{ github.ref_name }}" $(find /home/runner/work/output-from-docker -name "*.wasm" -type f)
+          gh release upload "${{ github.ref_name }}" $(find /home/runner/work/output-from-docker -name "*.source.json" -type f)
+          gh release upload "${{ github.ref_name }}" $(find /home/runner/work/output-from-docker -name "*.abi.json" -type f)
+          gh release upload "${{ github.ref_name }}" $(find /home/runner/work/output-from-docker -name "artifacts.json" -type f)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
