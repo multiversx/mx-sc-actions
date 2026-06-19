@@ -334,6 +334,12 @@ This modular approach allows you to:
 
 See [reproducible-build.yml](.github/workflows/reproducible-build.yml).
 
+The workflow builds contracts deterministically inside a pinned Docker image (`multiversx/sdk-rust-contract-builder`) using `sc-meta reproducible-build build`. It installs `sc-meta` on the runner, which orchestrates the Docker container, runs the build with `--locked` (so Cargo refuses to update or create any `Cargo.lock` file), verifies that no `Cargo.lock` files were created or modified during the build, and produces an `artifacts.json` summary alongside the compiled `.wasm`, `.abi.json`, and `.source.json` files.
+
+Release notes (with blake2b codehashes) are generated via `sc-meta reproducible-build release-notes`.
+
+> **Prerequisite:** every `wasm/` crate must have a committed `Cargo.lock`. The build will fail if any are missing, because `--locked` requires the lock file to already exist.
+
 ## Configuration entries
 
 The following configuration entries are available:
@@ -343,8 +349,6 @@ The following configuration entries are available:
 - `contract_name`: a specific contract to be built. If not specified, all contracts in the workspace (repository) are built.
 - `create_release`: whether to create a new release (and upload the build artifacts as assets).
 - `attach_to_existing_release`: whether to upload the build artifacts on an existing release. This only works if the current `github.ref_name` (of the executing workflow) is associated with an existing release.
-- `skip_preliminary_checks`: whether to skip the preliminary checks. **Never set this in production!**
-- `package_whole_project_src`: whether to include all project files in the packaged source (`*.source.json`).
 
 Note that `create_release` and `attach_to_existing_release` are mutually exclusive.
 
