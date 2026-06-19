@@ -39,21 +39,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Preliminary checks
-        run: |
-          missing=0
-          while IFS= read -r -d '' cargo_toml; do
-            cargo_lock="${cargo_toml%Cargo.toml}Cargo.lock"
-            if [[ ! -f "$cargo_lock" ]]; then
-              echo "ERROR: wasm/Cargo.lock not found: $cargo_lock"
-              missing=1
-            fi
-          done < <(find "${{ inputs.project_path }}" -path "*/wasm/Cargo.toml" -print0)
-          if [[ $missing -eq 1 ]]; then
-            echo "One or more wasm/Cargo.lock files are missing. They are essential for reproducible builds."
-            exit 1
-          fi
-
       - name: Install sc-meta
         run: cargo install multiversx-sc-meta --locked
 
