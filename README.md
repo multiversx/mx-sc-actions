@@ -109,7 +109,7 @@ jobs:
     with:
       rust-toolchain: "stable"  # optional, default: "stable"
       runs-on: "ubuntu-latest"  # optional, default: "ubuntu-latest"
-      rust-target: "wasm32-unknown-unknown"  # optional, default: "wasm32-unknown-unknown"
+      rust-target: "wasm32v1-none"  # optional, default: "wasm32v1-none"
       sc-meta-version: ""  # optional, default: latest
       mx-scenario-go-version: ""  # optional, default: latest
       wasm-opt-version: "108"  # optional, default: "108"
@@ -128,7 +128,7 @@ jobs:
     with:
       rust-toolchain: "stable"  # optional, default: "stable"
       runs-on: "ubuntu-latest"  # optional, default: "ubuntu-latest"
-      rust-target: "wasm32-unknown-unknown"  # optional, default: "wasm32-unknown-unknown"
+      rust-target: "wasm32v1-none"  # optional, default: "wasm32v1-none"
 ```
 
 #### 3. Wasm Tests (`wasm-tests.yml`)
@@ -171,7 +171,7 @@ jobs:
     with:
       rust-toolchain: "stable"  # optional, default: "stable"
       runs-on: "ubuntu-latest"  # optional, default: "ubuntu-latest"
-      rust-target: "wasm32-unknown-unknown"  # optional, default: "wasm32-unknown-unknown"
+      rust-target: "wasm32v1-none"  # optional, default: "wasm32v1-none"
       coverage-args: "--output ./coverage.md"  # optional, default: "--output ./coverage.md"
 ```
 
