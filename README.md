@@ -336,7 +336,7 @@ See [reproducible-build.yml](.github/workflows/reproducible-build.yml).
 
 The workflow builds contracts deterministically inside a pinned Docker image (`multiversx/sdk-rust-contract-builder`) using `sc-meta reproducible-build build`. It installs `sc-meta` on the runner, which orchestrates the Docker container, runs the build with `--locked` (so Cargo refuses to update or create any `Cargo.lock` file), verifies that no `Cargo.lock` files were created or modified during the build, and produces an `artifacts.json` summary alongside the compiled `.wasm`, `.abi.json`, and `.source.json` files.
 
-Release notes (with blake2b codehashes) are generated via `sc-meta reproducible-build release-notes`.
+Release notes (with blake2b codehashes) are generated via `sc-meta reproducible-build release-notes` and added after the existing notes of the release (e.g. the generated "What's Changed"), which are kept.
 
 > **Prerequisite:** every `wasm/` crate must have a committed `Cargo.lock`. The build will fail if any are missing, because `--locked` requires the lock file to already exist.
 

@@ -79,7 +79,16 @@ jobs:
           sc-meta reproducible-build release-notes \
             --artifacts /home/runner/work/output-from-docker/artifacts.json \
             --docker-image "multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}" \
-            --output release_notes.txt
+            --output build_notes.txt
+
+          # Keep the existing release notes (e.g. the generated "What's Changed") and add the build notes after them.
+          existing_notes="$(gh release view "${{ github.ref_name }}" --json body --jq .body)"
+          if [[ -n "$existing_notes" ]]; then
+            printf '%s\n\n' "$existing_notes" > release_notes.txt
+          fi
+          cat build_notes.txt >> release_notes.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts to release, edit release notes
         if: ${{ inputs.attach_to_existing_release == true || inputs.create_release == true }}
