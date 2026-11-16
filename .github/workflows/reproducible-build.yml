@@ -15,7 +15,7 @@ on:
       contract_name:
         type: string
         required: false
-        description: A specific contract to be built
+        description: A specific contract, or a list of contracts separated by commas or spaces, to be built
       create_release:
         type: boolean
         description: Whether to create a new release
@@ -44,18 +44,40 @@ jobs:
 
       - name: Build contracts
         run: |
-          args=()
-          if [[ -n "${{ inputs.contract_name }}" ]]; then
-            args+=(--contract "${{ inputs.contract_name }}")
+          output=/home/runner/work/output-from-docker
+          build() {
+            sc-meta reproducible-build build \
+              --docker-image "multiversx/sdk-rust-contract-builder:${IMAGE_TAG}" \
+              --project "${PROJECT_PATH}" \
+              --no-docker-tty \
+              --no-docker-interactive \
+              "$@"
+          }
+
+          read -r -a contracts <<< "${CONTRACT_NAME//,/ }"
+          if [[ ${#contracts[@]} -eq 0 ]]; then
+            build --output "$output"
+            exit 0
           fi
 
-          sc-meta reproducible-build build \
-            --docker-image "multiversx/sdk-rust-contract-builder:${{ inputs.image_tag }}" \
-            --project "${{ inputs.project_path }}" \
-            --output /home/runner/work/output-from-docker \
-            --no-docker-tty \
-            --no-docker-interactive \
-            "${args[@]}"
+          # sc-meta builds one contract at a time: build each one, then gather
+          # the outputs in one folder with a single artifacts.json.
+          mkdir -p "$output"
+          for contract in "${contracts[@]}"; do
+            build --contract "$contract" --output "$RUNNER_TEMP/rb/$contract"
+            if ! jq -e '.contracts | length > 0' "$RUNNER_TEMP/rb/$contract/artifacts.json" > /dev/null; then
+              echo "ERROR: contract '$contract' not found in the project."
+              exit 1
+            fi
+            cp -R "$RUNNER_TEMP/rb/$contract/$contract" "$output/"
+          done
+          jq -s --arg contracts "${contracts[*]}" \
+            '.[0] + {buildOptions: (.[0].buildOptions + {specificContract: $contracts}), contracts: (map(.contracts) | add)}' \
+            "$RUNNER_TEMP"/rb/*/artifacts.json > "$output/artifacts.json"
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          PROJECT_PATH: ${{ inputs.project_path }}
+          CONTRACT_NAME: ${{ inputs.contract_name }}
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4
